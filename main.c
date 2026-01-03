@@ -1,18 +1,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <getopt.h>
+#include <errno.h>
 #include <pthread.h>
 #include "pthread-extra.h"
 #include "hashsum.h"
+#include "loadcheck.h"
 #include "minibar/minibar.h"
 
 #define PREFIX	"hashsum: "
 #define VERSION	"0.0.1"
 
-extern md_t algs[];
-
 /* options */
-static md_t *opt_alg = &algs[2];	/* heavily depends on hashsum.c impl */
+static md_t *opt_alg = NULL;
 static int opt_one = 0;
 static int opt_bin = 1;
 static int opt_check = 0;
@@ -38,7 +38,7 @@ int
 usage() {
 	int algstrlen = 0;
 	char algstr[1024] = "", *wptr = algstr;
-	for(md_t *a = algs; a->name != NULL; a++) {
+	for(md_t *a = get_hashes(); a->name != NULL; a++) {
 		int sz;
 		sz = snprintf(wptr, sizeof(algstr)-algstrlen, " %s", a->name);
 		algstrlen += sz;
@@ -127,7 +127,7 @@ parse_opts(int argc, char *argv[]) {
 			opt_one = 1;
 			break;
 		case 'a':
-			for(a = algs; a->name != NULL; a++) {
+			for(a = get_hashes(); a->name != NULL; a++) {
 				if(strcasecmp(a->name, optarg) == 0) {
 					opt_alg = a;
 					break;
@@ -215,41 +215,18 @@ escape(char *input, char *output, int outlen) {
 	return escaped;
 }
 
-int	/* return 0 if not unescaped, otherwise > 0 (# of unescaped chars) */
-unescape(char *input) {
-	int unescaped = 0;
-	char *iptr = input, *optr = input;
-	if(opt_zero) return 0;
-	for(iptr = input; *iptr; iptr++) {
-		switch(*iptr) {
-		case '\\':
-			unescaped++;
-			switch(*(iptr+1)) {
-			case '\\':
-				iptr++;
-				*optr++ = '\\';
-				break;
-			case 'n':
-				iptr++;
-				*optr++ = '\n';
-				break;
-			case 'r':
-				iptr++;
-				*optr++ = '\r';
-				break;
-			default:
-				/* drop the backslash */
-				unescaped--;
-				break;
-			}
-			break;
-		default:
-			*optr++ = *iptr;
-			break;
-		}
+void
+print_check1(job_t *job) {
+	fprintf(stderr, "%s: %s\n",
+		job->filename,
+		strcasecmp(job->dcheck, job->digest) == 0 ? "OK" : "FAILED");
+}
+
+void
+print_check(int njobs, job_t *jobs) {
+	for(int i = 0; i < njobs; i++) {
+		print_check1(&jobs[i]);
 	}
-	*optr = '\0';
-	return unescaped;
 }
 
 void
@@ -284,10 +261,6 @@ print_digest(int njobs, job_t *jobs) {
 	for(int i = 0; i < njobs; i++) {
 		print_digest1(&jobs[i]);
 	}
-}
-
-void
-print_check(int njobs, job_t *jobs) {
 }
 
 void
@@ -327,14 +300,29 @@ worker(void *__) {
 		if(opt_np == 0)
 			bar = minibar_get(job->filename);
 		hash1(job, updater, bar);
-		if(opt_np == 0)
+		if(opt_np == 0) {
 			minibar_complete(bar);
-		else
+		} else if(opt_check == 0) {
 			print_digest1(job);
+		} else {
+			print_check1(job);
+		}
 	}
 quit:
 	pthread_barrier_wait(&barrier);
 	return NULL;
+}
+
+job_t *
+jobs_alloc(int n) {
+	job_t *mem;
+	if((mem = (job_t *) malloc(sizeof(job_t) * n)) == NULL) {
+		fprintf(stderr, PREFIX "malloc failed (%d): %s\n",
+				errno, strerror(errno));
+		return NULL;
+	}
+	bzero(mem, sizeof(job_t) * n);
+	return mem;
 }
 
 int
@@ -343,15 +331,16 @@ main(int argc, char *argv[]) {
 	int ncores = get_ncores();
 	pthread_t tid;
 
+	if((opt_alg = lookup_hash("SHA256")) == NULL) {
+		fprintf(stderr, PREFIX "FATAL: cannot find the default algorithm.\n");
+		return -1;
+	}
+
 	if((idx = parse_opts(argc, argv)) < 0) return -1;
 
 	if(opt_check == 0) {
 		njobs = argc - idx;
-		if((jobs = (job_t *) malloc(sizeof(job_t) * njobs)) == NULL) {
-			perror("malloc");
-			return -1;
-		}
-		bzero(jobs, sizeof(job_t) * njobs);
+		if((jobs = jobs_alloc(njobs)) == NULL) exit(-1);
 		for(i = 0; i < njobs; i++) {
 			if(opt_one == 0)
 				pthread_mutex_init(&jobs[i].mutex, NULL);
@@ -360,6 +349,23 @@ main(int argc, char *argv[]) {
 		}
 	} else {
 		/* TODO */
+		int files = argc - idx;
+		int n, estjobs = 0;
+		for(i = 0; i < files; i++) {
+			int n = scan_checks(argv[idx+i]);
+			if(n < 0) {
+				fprintf(stderr, PREFIX "%s: open for scanning failed (%d): %s\n",
+					argv[idx+i], errno, strerror(errno));
+				continue;
+			}
+			estjobs += n;
+		}
+		if((jobs = jobs_alloc(estjobs)) == NULL) exit(-1);
+		for(i = 0; i < files; i++) {
+			n = load_checks(argv[idx+i], &jobs[njobs], estjobs-njobs, opt_alg, opt_one == 0);
+			if(n < 0) continue;
+			njobs += n;
+		}
 	}
 
 	if(opt_workers <= 0) opt_workers = 1 + (ncores>>1);
@@ -371,7 +377,11 @@ main(int argc, char *argv[]) {
 	if(opt_one) {
 		for(i = 0; i < njobs; i++) {
 			hash1(&jobs[i], NULL, NULL);
-			print_digest1(&jobs[i]);
+			if(opt_check) {
+				print_check1(&jobs[i]);
+			} else {
+				print_digest1(&jobs[i]);
+			}
 		}
 	} else if(njobs > 0) {
 		if(opt_np == 0) {
@@ -415,7 +425,8 @@ main(int argc, char *argv[]) {
 		if(opt_one == 0 && opt_np == 0)
 			print_digest(njobs, jobs);
 	} else {
-		/* TODO */
+		if(opt_one == 0 && opt_np == 0)
+			print_check(njobs, jobs);
 	}
 
 	free(jobs);

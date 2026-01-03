@@ -39,6 +39,21 @@ md_t algs[] = {
 	{ NULL, NULL }
 };
 
+md_t *
+get_hashes() {
+	return algs;
+}
+
+md_t *
+lookup_hash(const char *name) {
+	int idx = 0;
+	while(algs[idx].name != NULL) {
+		if(strcasecmp(name, algs[idx].name) == 0) return &algs[idx];
+		idx++;
+	}
+	return NULL;
+}
+
 char *
 digest(unsigned char *hash, unsigned int hlen, char *digest, unsigned int dlen) {
 	int i, sz, clen = 0;

@@ -65,6 +65,8 @@ enum {           // job state codes
 	ERR_FINAL,   // hash final failaed
 };
 
+md_t * get_hashes();
+md_t * lookup_hash(const char *name);
 void * hash1(job_t *job, visualizer_t vzer, void *varg);
 
 #ifdef __cplusplus
