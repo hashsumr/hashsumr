@@ -373,7 +373,7 @@ main(int argc, char *argv[]) {
 			hash1(&jobs[i], NULL, NULL);
 			print_digest1(&jobs[i]);
 		}
-	} else {
+	} else if(njobs > 0) {
 		if(opt_np == 0) {
 			if(minibar_open(stderr, opt_workers) < 0) {
 				fprintf(stderr, PREFIX "minibar init failed.\n");
