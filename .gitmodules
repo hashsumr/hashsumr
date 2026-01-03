@@ -1,0 +1,3 @@
+[submodule "minibar-src"]
+	path = minibar-src
+	url = https://github.com/chunying/minibar.git
