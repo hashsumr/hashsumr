@@ -88,7 +88,7 @@ hash1(job_t *job, visualizer_t vzer, void *varg) {
 
 	if(stat(job->filename, &st) < 0) {
 		if(errno == ENOENT)
-			return (void *) jobstate(job, ERR_MISSING, "file not found");
+			return (void *) jobstate(job, ERR_MISSING, "no such file or directory");
 		return (void *) jobstate(job, ERR_STAT, "stat failed (%d): %s", errno, strerror(errno));
 	}
 
