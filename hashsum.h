@@ -1,0 +1,58 @@
+#ifndef __HASHSUM_H__
+#define __HASHSUM_H__
+
+#include <pthread.h>
+#include <openssl/evp.h>
+#include "blake3/blake3.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define	HASHSUM_MAX_DIGEST_SIZE EVP_MAX_DIGEST_SIZE
+
+typedef union ctx_s {
+	EVP_MD_CTX *evp;
+	blake3_hasher *b3hasher;
+}	ctx_t;
+
+typedef ctx_t* (*ctx_new_t)();
+typedef int    (*ctx_init_t)(ctx_t *ctx, void *arg);
+typedef void   (*ctx_free_t)(ctx_t *ctx);
+typedef int    (*ctx_update_t)(ctx_t *ctx, const void *buf, size_t bufsz);
+typedef int    (*ctx_final_t)(ctx_t *ctx, unsigned char *digest, unsigned int *dlen);
+
+typedef struct md_s {
+	const char *name;
+	void *arginit; /* argument passed to finit */
+	ctx_new_t    fnew;
+	ctx_init_t   finit;
+	ctx_free_t   ffree;
+	ctx_update_t fupdate;
+	ctx_final_t  ffinal;
+}	md_t;
+
+#define	EVP_MAX_DIGEST_SIZE	((EVP_MAX_MD_SIZE<<1) + 2)
+#define	ERRMSG_SIZE	256
+
+typedef struct job_s {
+	pthread_mutex_t mutex;
+	md_t *md;
+	char *filename;
+	unsigned long long checked;
+	unsigned long long filesz;
+	long code;	/* job state code */
+	unsigned int hashlen;
+	unsigned char hash[EVP_MAX_MD_SIZE];
+	char digest[EVP_MAX_DIGEST_SIZE];
+	char dcheck[EVP_MAX_DIGEST_SIZE];	/* for opt_check */
+	char errmsg[ERRMSG_SIZE];
+}	job_t;
+
+typedef void   (*visualizer_t)(job_t *job, void *arg);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __HASHSUM_H__ */
