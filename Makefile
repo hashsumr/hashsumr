@@ -16,12 +16,13 @@ endif
 all: $(PROGS)
 
 blake3/libblake3.a:
-	git clone https://github.com/BLAKE3-team/BLAKE3.git blake3-src
-	(cd blake3-src/c && cmake . && make)
+	#git clone https://github.com/BLAKE3-team/BLAKE3.git blake3-src
+	mkdir -p blake3-src/c/build
+	(cd blake3-src/c/build && cmake .. && make)
 	mkdir -p ./blake3
-	cp blake3-src/c/blake3.h    ./blake3/
-	cp blake3-src/c/libblake3.a ./blake3/
-	rm -rf ./blake3-src
+	cp blake3-src/c/blake3.h          ./blake3/
+	cp blake3-src/c/build/libblake3.a ./blake3/
+	rm -rf blake3-src/c/build
 
 minibar/libminibar.a:
 	#git clone https://github.com/chunying/minibar.git minibar-src
