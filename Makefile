@@ -24,7 +24,7 @@ blake3/libblake3.a:
 	rm -rf ./blake3-src
 
 minibar/libminibar.a:
-	git clone https://github.com/chunying/minibar.git minibar-src
+	#git clone https://github.com/chunying/minibar.git minibar-src
 	(cd minibar-src && make libminibar.a)
 	mkdir ./minibar
 	cp minibar-src/minibar.h    ./minibar/
