@@ -5,7 +5,7 @@ CFLAGS	= -Wall -g
 LDFLAGS	= -pthread -lcrypto -lssl -L./blake3 -lblake3 -L./minibar -lminibar -lm
 
 PROGS	= hashsum
-HASHSUM_OBJS	= hashsum.o wrappers-openssl.o wrappers-blake3.o pthread-extra.o
+HASHSUM_OBJS	= main.o hashsum.o wrappers-openssl.o wrappers-blake3.o pthread-extra.o
 
 ifeq ($(UNAME_S),Darwin)
 OPENSSL3	= $(shell brew --prefix openssl@3)

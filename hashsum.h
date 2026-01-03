@@ -51,6 +51,22 @@ typedef struct job_s {
 
 typedef void   (*visualizer_t)(job_t *job, void *arg);
 
+/* state codes */
+
+enum {           // job state codes
+	STATE_UNKNOWN = 0,
+	STATE_DONE,	 // done!
+	ERR_STAT,    // stat(2) failed
+	ERR_MISSING, // file not found
+	ERR_NOTREG,  // not a regular file
+	ERR_OPEN,    // open(2) failed
+	ERR_INIT,    // hash init failed
+	ERR_UPDATE,  // hash update failed
+	ERR_FINAL,   // hash final failaed
+};
+
+void * hash1(job_t *job, visualizer_t vzer, void *varg);
+
 #ifdef __cplusplus
 }
 #endif
