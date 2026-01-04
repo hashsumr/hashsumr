@@ -16,7 +16,7 @@ static md_t *opt_alg = NULL;
 static int opt_one = 0;
 static int opt_bin = 1;
 static int opt_check = 0;
-static int opt_tag = 0;
+static int opt_tag = 1;
 static int opt_zero = 0;
 static int opt_workers = 0;
 static int opt_np = 0;
@@ -63,7 +63,8 @@ usage() {
 "  -a, --algorithm       choose the algorithm (default: %s)\n"
 "  -b, --binary          read in binary mode (default)\n"
 "  -c, --check           read checksums from the FILEs and check them\n"
-"      --tag             create a BSD-style checksum\n"
+"      --gnu             create a GNU-style checksum\n"
+"      --tag             create a BSD-style checksum (default)\n"
 "  -t, --text            (*) read in text mode\n"
 "  -z, --zero            end each output line with NUL, not newline,\n"
 "                          and disable file name escaping\n"
@@ -94,6 +95,7 @@ parse_opts(int argc, char *argv[]) {
 		{ "algorithm", required_argument, NULL, 'a' },
 		{ "binary",          no_argument, NULL, 'b' },
 		{ "check",           no_argument, NULL, 'c' },
+		{ "gnu",             no_argument, NULL,  0  },
 		{ "tag",             no_argument, NULL,  0  },
 		{ "text",            no_argument, NULL, 't' },
 		{ "zero",            no_argument, NULL, 'z' },
@@ -116,6 +118,8 @@ parse_opts(int argc, char *argv[]) {
 		case 0: /* for longopts */
 			if(strcmp(opts[optidx].name, "tag") == 0) {
 				opt_tag = 1;
+			} else if(strcmp(opts[optidx].name, "gnu") == 0) {
+				opt_tag = 0;
 			} else if(strcmp(opts[optidx].name, "np") == 0) {
 				opt_np = 1;
 			} else if(strcmp(opts[optidx].name, "workers") == 0) {
