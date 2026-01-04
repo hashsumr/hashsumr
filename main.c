@@ -329,7 +329,6 @@ visualizer(void *__) {
 
 void *
 worker(void *__) {
-	int count = 0;
 	visualizer_t updater = vzupdater;
 	job_t *job;
 	if(opt_np) updater = NULL;
@@ -344,7 +343,6 @@ worker(void *__) {
 		}
 		pthread_mutex_unlock(&mutex_jobs);
 		if(job == NULL) goto quit;
-		count++;
 		/* run the job */
 		if(opt_np == 0)
 			bar = minibar_get(job->filename);
