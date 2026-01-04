@@ -428,9 +428,9 @@ main(int argc, char *argv[]) {
 
 	if(opt_workers <= 0) opt_workers = 1 + (ncores>>1);
 	if(opt_workers > njobs) opt_workers = njobs;
-	fprintf(stderr, PREFIX "%d processor(s) detected; workers = %d."
+	fprintf(stderr, PREFIX "%d processor(s) detected; workers = %d;"
 		" algorithm = %s"
-		"\n", ncores, opt_workers, opt_alg->name);
+		".\n", ncores, opt_workers, opt_alg->name);
 
 	if(opt_one) {
 		for(i = 0; i < njobs; i++) {
