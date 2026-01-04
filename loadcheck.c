@@ -88,7 +88,6 @@ process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 		hash = line;
 		name = ptr+2;
 		job->md = alg;
-		job->filename = strdup("TODO");
 	}
 	/* fill the rest of job fields */
 	if(init_mutex)
