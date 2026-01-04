@@ -40,6 +40,7 @@ static int hash_err = 0;
 static int hash_missing = 0;
 static int check_ok = 0;
 static int check_failed = 0;
+static int check_linerror = 0;
 
 int
 usage() {
@@ -73,8 +74,8 @@ usage() {
 "      --ignore-missing  don't fail or report status for missing files\n"
 "  -q, --quiet           don't print OK for each successfully verified file\n"
 "      --status          don't output anything, status code shows success\n"
-"      --strict          (*) exit non-zero for improperly formatted checksum lines\n"
-"  -w, --warn            (*) warn about improperly formatted checksum lines\n"
+"      --strict          exit non-zero for improperly formatted checksum lines\n"
+"  -w, --warn            warn about improperly formatted checksum lines\n"
 "\n"
 "  -h, --help            display this help and exit\n"
 "  -v, --version         output version information and exit\n"
@@ -96,13 +97,13 @@ parse_opts(int argc, char *argv[]) {
 		{ "tag",             no_argument, NULL,  0  },
 		{ "text",            no_argument, NULL, 't' },
 		{ "zero",            no_argument, NULL, 'z' },
-		{ "workers",         required_argument, NULL, 0 },
+		{ "workers",   required_argument, NULL,  0  },
 		{ "np",              no_argument, NULL,  0  },
 		{ "ignore-missing",  no_argument, NULL,  0  },
 		{ "quiet",           no_argument, NULL, 'q' },
 		{ "status",          no_argument, NULL,  0  },
 		{ "strict",          no_argument, NULL,  0  },
-		{ "warn",            no_argument, NULL,  0  },
+		{ "warn",            no_argument, NULL, 'w' },
 		{ "help",            no_argument, NULL, 'h' },
 		{ "version",         no_argument, NULL, 'v' },
 		{ 0, 0 }
@@ -110,7 +111,7 @@ parse_opts(int argc, char *argv[]) {
 	if(argc < 2) {
 		return usage();
 	}
-	while((ch = getopt_long(argc, argv, "1a:bctzqhv", opts, &optidx)) != -1) {
+	while((ch = getopt_long(argc, argv, "1a:bctzqwhv", opts, &optidx)) != -1) {
 		switch(ch) {
 		case 0: /* for longopts */
 			if(strcmp(opts[optidx].name, "tag") == 0) {
@@ -127,8 +128,6 @@ parse_opts(int argc, char *argv[]) {
 				opt_np = 1;
 			} else if(strcmp(opts[optidx].name, "strict") == 0) {
 				opt_strict = 1;
-			} else if(strcmp(opts[optidx].name, "warn") == 0) {
-				opt_warn = 1;
 			}
 			break;
 		case '1':
@@ -161,6 +160,9 @@ parse_opts(int argc, char *argv[]) {
 		case 'q':
 			opt_quiet = 1;
 			opt_np = 1;
+			break;
+		case 'w':
+			opt_warn = 1;
 			break;
 		case 'v':
 			fprintf(stderr, PREFIX "version " VERSION "\n");
@@ -252,9 +254,14 @@ return_value() {
 	if(opt_check == 0) {
 		return (hash_err + hash_missing > 0) ? 1 : 0;
 	}
+	if(opt_status == 0 && opt_warn && check_linerror > 0) {
+		fprintf(stderr, PREFIX "WARNING: %d line is improperly formatted\n", check_linerror);
+	}
 	if(opt_status == 0 && check_failed > 0) {
 		fprintf(stderr, PREFIX "WARNING: %d computed checksum did NOT match\n", check_failed);
 	}
+	if(opt_strict && check_linerror > 0)
+		return 1;
 	if(opt_ignore_missing)
 		return (check_failed > 0) ? 1 : 0;
 	return (check_failed + hash_missing> 0) ? 1 : 0;
@@ -409,9 +416,11 @@ main(int argc, char *argv[]) {
 		}
 		if((jobs = jobs_alloc(estjobs)) == NULL) exit(-1);
 		for(i = 0; i < files; i++) {
-			n = load_checks(argv[idx+i], &jobs[njobs], estjobs-njobs, opt_alg, opt_one == 0);
+			int e = 0;
+			n = load_checks(argv[idx+i], &jobs[njobs], estjobs-njobs, opt_alg, opt_one == 0, &e);
 			if(n < 0) continue;
 			njobs += n;
+			check_linerror += e;
 		}
 	}
 

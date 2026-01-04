@@ -131,8 +131,8 @@ scan_checks(const char *filename) {
 }
 
 int
-load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mutex) {
-	int count = 0;
+load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mutex, int *err) {
+	int count = 0, error = 0;
 	size_t sz, leftover = 0;
 	FILE *fp;
 	char buf[65537];
@@ -146,6 +146,8 @@ load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mu
 				buf[i] = '\0';
 				if(process_line(buf+start, &jobs[count], alg, init_mutex) == 0)
 					count++;
+				else
+					error++;
 				start = i + 1;
 			}
 		}
@@ -158,8 +160,11 @@ load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mu
 		buf[leftover] = '\0';
 		if(process_line(buf, &jobs[count], alg, init_mutex) == 0)
 			count++;
+		else
+			error++;
 	}
 	fclose(fp);
+	if(err) *err = error;
 	return count;
 }
 
