@@ -34,6 +34,13 @@ static int    nextjob = 0;
 static pthread_mutex_t mutex_jobs = PTHREAD_MUTEX_INITIALIZER;
 static pthread_barrier_t barrier;;
 
+/* hash & check statistics */
+static int hash_done = 0;
+static int hash_err = 0;
+static int hash_missing = 0;
+static int check_ok = 0;
+static int check_failed = 0;
+
 int
 usage() {
 	int algstrlen = 0;
@@ -63,9 +70,9 @@ usage() {
 "      --np              no progress bar\n"
 "\n"
 "The following five options are useful only when verifying checksums:\n"
-"      --ignore-missing  (*) don't fail or report status for missing files\n"
-"  -q, --quiet           (*) don't print OK for each successfully verified file\n"
-"      --status          (*) don't output anything, status code shows success\n"
+"      --ignore-missing  don't fail or report status for missing files\n"
+"  -q, --quiet           don't print OK for each successfully verified file\n"
+"      --status          don't output anything, status code shows success\n"
 "      --strict          (*) exit non-zero for improperly formatted checksum lines\n"
 "  -w, --warn            (*) warn about improperly formatted checksum lines\n"
 "\n"
@@ -117,6 +124,7 @@ parse_opts(int argc, char *argv[]) {
 				opt_ignore_missing = 1;
 			} else if(strcmp(opts[optidx].name, "status") == 0) {
 				opt_status = 1;
+				opt_np = 1;
 			} else if(strcmp(opts[optidx].name, "strict") == 0) {
 				opt_strict = 1;
 			} else if(strcmp(opts[optidx].name, "warn") == 0) {
@@ -152,6 +160,7 @@ parse_opts(int argc, char *argv[]) {
 			break;
 		case 'q':
 			opt_quiet = 1;
+			opt_np = 1;
 			break;
 		case 'v':
 			fprintf(stderr, PREFIX "version " VERSION "\n");
@@ -217,9 +226,38 @@ escape(char *input, char *output, int outlen) {
 
 void
 print_check1(job_t *job) {
-	fprintf(stderr, "%s: %s\n",
+	if(job->code == STATE_DONE) {
+		int ok = (strcasecmp(job->dcheck, job->digest) == 0);
+		if(ok) {
+			check_ok++;
+		} else {
+			check_failed++;
+		}
+		if(opt_status || (ok && opt_quiet)) return;
+		fprintf(stderr, "%s: %s\n",
+			job->filename, ok ? "OK" : "FAILED");
+		return;
+	}
+	if(opt_status)
+		return;
+	if(job->code == ERR_MISSING && opt_ignore_missing)
+		return;
+	fprintf(stderr, PREFIX "%s: %s\n",
 		job->filename,
-		strcasecmp(job->dcheck, job->digest) == 0 ? "OK" : "FAILED");
+		job->errmsg);
+}
+
+int
+return_value() {
+	if(opt_check == 0) {
+		return (hash_err + hash_missing > 0) ? 1 : 0;
+	}
+	if(opt_status == 0 && check_failed > 0) {
+		fprintf(stderr, PREFIX "WARNING: %d computed checksum did NOT match\n", check_failed);
+	}
+	if(opt_ignore_missing)
+		return (check_failed > 0) ? 1 : 0;
+	return (check_failed + hash_missing> 0) ? 1 : 0;
 }
 
 void
@@ -300,6 +338,15 @@ worker(void *__) {
 		if(opt_np == 0)
 			bar = minibar_get(job->filename);
 		hash1(job, updater, bar);
+		/* update statistics */
+		if(job->code == STATE_DONE) {
+			hash_done++;
+		} else if(job->code == ERR_MISSING) {
+			hash_missing++;
+		} else {
+			hash_err++;
+		}
+		/* output */
 		if(opt_np == 0) {
 			minibar_complete(bar);
 		} else if(opt_check == 0) {
@@ -431,5 +478,5 @@ main(int argc, char *argv[]) {
 
 	free(jobs);
 
-	return 0;
+	return return_value();
 }
