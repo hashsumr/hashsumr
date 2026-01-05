@@ -2,10 +2,10 @@
 UNAME_S	= $(shell uname -s)
 CC	= gcc
 CFLAGS	= -Wall -g
-LDFLAGS	= -pthread -lcrypto -lssl -L./blake3 -lblake3 -L./minibar -lminibar -lm
+LDFLAGS	= -lcrypto -lssl -L./blake3 -lblake3 -L./minibar -lminibar -L./pthread_compat -lpthread_compat -lm -pthread
 
 PROGS	= hashsum
-HASHSUM_OBJS	= main.o loadcheck.o hashsum.o wrappers-openssl.o wrappers-blake3.o pthread-extra.o
+HASHSUM_OBJS	= main.o loadcheck.o hashsum.o wrappers-openssl.o wrappers-blake3.o
 
 ifeq ($(UNAME_S),Darwin)
 OPENSSL3	= $(shell brew --prefix openssl@3)
@@ -16,29 +16,34 @@ endif
 all: $(PROGS)
 
 blake3/libblake3.a:
-	#git clone https://github.com/BLAKE3-team/BLAKE3.git blake3-src
 	mkdir -p blake3-src/c/build
 	(cd blake3-src/c/build && cmake .. && make)
-	mkdir -p ./blake3
+	@-mkdir ./blake3
 	cp blake3-src/c/blake3.h          ./blake3/
 	cp blake3-src/c/build/libblake3.a ./blake3/
 	rm -rf blake3-src/c/build
 
 minibar/libminibar.a:
-	#git clone https://github.com/chunying/minibar.git minibar-src
-	(cd minibar-src && make libminibar.a)
-	mkdir ./minibar
+	make -C minibar-src libminibar.a
+	@-mkdir ./minibar
 	cp minibar-src/minibar.h    ./minibar/
 	cp minibar-src/libminibar.a ./minibar/
 	make -C minibar-src clean
 
+pthread_compat/libpthread_compat.a:
+	make -C pthread_compat_src libpthread_compat.a
+	@-mkdir pthread_compat
+	cp pthread_compat_src/*.h ./pthread_compat/
+	cp pthread_compat_src/*.a ./pthread_compat/
+	make -C pthread_compat_src clean
+
 %.o: %.c
 	$(CC) -c $(CFLAGS) $<
 
-hashsum: blake3/libblake3.a minibar/libminibar.a $(HASHSUM_OBJS)
+hashsum: blake3/libblake3.a minibar/libminibar.a pthread_compat/libpthread_compat.a $(HASHSUM_OBJS)
 	$(CC) -o $@ $(HASHSUM_OBJS) $(LDFLAGS)
 
 clean:
 	rm -f *.o $(PROGS)
-	rm -rf ./blake3 ./minibar
+	rm -rf ./blake3 ./minibar ./pthread_compat
 

@@ -3,10 +3,10 @@
 #include <getopt.h>
 #include <errno.h>
 #include <pthread.h>
-#include "pthread-extra.h"
 #include "hashsum.h"
 #include "loadcheck.h"
 #include "minibar/minibar.h"
+#include "pthread_compat/pthread_compat.h"
 
 #define PREFIX	"hashsum: "
 #define VERSION	"0.0.1"
