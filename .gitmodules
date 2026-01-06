@@ -1,9 +1,9 @@
-[submodule "minibar-src"]
-	path = minibar-src
+[submodule "minibar"]
+	path = minibar
 	url = https://github.com/chunying/minibar.git
 [submodule "blake3-src"]
 	path = blake3-src
 	url = https://github.com/BLAKE3-team/BLAKE3.git
-[submodule "pthread_compat_src"]
-	path = pthread_compat_src
+[submodule "pthread_compat"]
+	path = pthread_compat
 	url = https://github.com/chunying/pthread-compat.git

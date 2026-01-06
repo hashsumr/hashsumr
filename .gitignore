@@ -1,5 +1,3 @@
 /blake3
-/minibar
 /hashsum
-/pthread_compat
 *.o
