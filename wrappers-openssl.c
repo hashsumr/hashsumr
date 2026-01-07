@@ -1,4 +1,7 @@
 #include <stdlib.h>
+
+#ifndef _WIN32
+
 #include "wrappers-openssl.h"
 
 ctx_t *
@@ -29,7 +32,7 @@ openssl_free(ctx_t *ctx) {
 }
 
 int
-openssl_update(ctx_t *ctx, const void *buf, size_t bufsz) {
+openssl_update(ctx_t *ctx, void *buf, size_t bufsz) {
 	return EVP_DigestUpdate(ctx->evp, buf, bufsz);
 }
 
@@ -57,3 +60,4 @@ openssl_final_xof64(ctx_t *ctx, unsigned char *digest, unsigned int *dlen) {
 	return openssl_final_xof(ctx, 64, digest, dlen);
 }
 
+#endif

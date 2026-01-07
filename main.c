@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#include "getopt.h"
+#else
 #include <getopt.h>
+#endif
 #include <errno.h>
-#include <pthread.h>
 #include "hashsum.h"
 #include "loadcheck.h"
 #include "minibar/minibar.h"
@@ -10,6 +14,10 @@
 
 #define PREFIX	"hashsum: "
 #define VERSION	"0.0.1"
+
+#ifdef _WIN32
+#define PATH_MAX	256
+#endif
 
 /* options */
 static md_t *opt_alg = NULL;
@@ -139,7 +147,11 @@ parse_opts(int argc, char *argv[]) {
 			break;
 		case 'a':
 			for(a = get_hashes(); a->name != NULL; a++) {
+#ifdef _WIN32
+				if(_stricmp(a->name, optarg) == 0) {
+#else
 				if(strcasecmp(a->name, optarg) == 0) {
+#endif
 					opt_alg = a;
 					break;
 				}
@@ -187,8 +199,14 @@ get_ncores() {
 	if(opt_one) {
 		return 1;
 	} else {
+#ifdef _WIN32
+		SYSTEM_INFO sysinfo;
+		GetSystemInfo(&sysinfo);
+		return sysinfo.dwNumberOfProcessors;
+#else
 		long nprocs = sysconf(_SC_NPROCESSORS_ONLN);
 		return nprocs;
+#endif
 	}
 }
 
@@ -197,7 +215,11 @@ escape(char *input, char *output, int outlen) {
 	int escaped = 0, wlen = 0;
 	char *iptr = input, *optr = output;
 	if(opt_zero) {
+#ifdef _WIN32
+		strncpy_s(output, outlen, input, strlen(input));
+#else
 		strncpy(output, input, outlen);
+#endif
 		return 0;
 	}
 	for(iptr = input; *iptr && (outlen-wlen) > 3; iptr++) {
@@ -233,7 +255,11 @@ escape(char *input, char *output, int outlen) {
 void
 print_check1(job_t *job) {
 	if(job->code == STATE_DONE) {
+#ifdef _WIN32
+		int ok = (_stricmp(job->dcheck, job->digest) == 0);
+#else
 		int ok = (strcasecmp(job->dcheck, job->digest) == 0);
+#endif
 		if(ok) {
 			check_ok++;
 		} else {
@@ -322,7 +348,11 @@ void *
 visualizer(void *__) {
 	while(running) {
 		minibar_refresh();
+#ifdef _WIN32
+		Sleep(1000);
+#else
 		sleep(1);
+#endif
 	}
 	return NULL;
 }
@@ -372,26 +402,90 @@ quit:
 job_t *
 jobs_alloc(int n) {
 	job_t *mem;
+	char msg[128];
 	if((mem = (job_t *) malloc(sizeof(job_t) * n)) == NULL) {
 		fprintf(stderr, PREFIX "malloc failed (%d): %s\n",
-				errno, strerror(errno));
+				errno,
+				herrmsg(msg, sizeof(msg), errno));
 		return NULL;
 	}
-	bzero(mem, sizeof(job_t) * n);
+	memset(mem, 0, sizeof(job_t) * n);
 	return mem;
 }
+
+#ifdef _WIN32
+char **
+append_argv(char *value, char **argv, int *argc, int *sz) {
+	if(*argc == *sz) {
+		if((argv = (char**) realloc(argv, sizeof(char*) * ((*sz) + 16))) == NULL) {
+			fprintf(stderr, PREFIX "argv/append: realloc failed\n");
+			exit(-1);
+		}
+		*sz += 16;
+	}
+	argv[(*argc)++] = value;
+	return argv;
+}
+
+char **
+expand_files(char *pattern, char **argv, int *argc, int *sz) {
+	HANDLE h;
+	WIN32_FIND_DATA fd;
+	char *value;
+	if((h = FindFirstFileA(pattern, &fd)) == INVALID_HANDLE_VALUE) {
+		/* no match */
+		return 0;
+	}
+	do {
+		if(strcmp(fd.cFileName, ".") == 0
+		|| strcmp(fd.cFileName, "..") == 0)
+			continue;
+		if((value = strdup(fd.cFileName)) == NULL) {
+			fprintf(stderr, PREFIX "argv/expand: alloc filename failed\n");
+			exit(-1);
+		}
+		argv = append_argv(value, argv, argc, sz);
+	} while(FindNextFileA(h, &fd));
+	FindClose(h);
+	return argv;
+}
+
+char **
+expand_args(int *argc, char *argv[]) {
+	int i, n, newargc = 0, sz = 16;
+	char **newargv = NULL;
+	if(argc == NULL) return NULL;
+	if((newargv = (char **) malloc(sizeof(char*) * sz)) == NULL)
+		return NULL;
+	newargc = 0;
+	for(i = 0; i < *argc; i++) {
+		if(strchr(argv[i], '*') == NULL
+		&& strchr(argv[i], '?') == NULL) {
+			newargv = append_argv(argv[i], newargv, &newargc, &sz);
+			continue;
+		}
+		newargv = expand_files(argv[i], newargv, &newargc, &sz);
+	}
+	*argc = newargc;
+	return newargv;
+}
+#endif
 
 int
 main(int argc, char *argv[]) {
 	int i, idx, err;
 	int ncores = get_ncores();
+	char msg[128];
 	pthread_t tid;
 
 	if((opt_alg = lookup_hash("SHA256")) == NULL) {
 		fprintf(stderr, PREFIX "FATAL: cannot find the default algorithm.\n");
 		return -1;
 	}
-
+#ifdef _WIN32
+	if((argv = expand_args(&argc, argv)) == NULL)
+		return -1;
+#endif
 	if((idx = parse_opts(argc, argv)) < 0) return -1;
 
 	if(opt_check == 0) {
@@ -406,19 +500,19 @@ main(int argc, char *argv[]) {
 	} else {
 		/* TODO */
 		int files = argc - idx;
-		int n, estjobs = 0;
+		int estjobs = 0;
 		for(i = 0; i < files; i++) {
 			int n = scan_checks(argv[idx+i]);
 			if(n < 0) {
 				fprintf(stderr, PREFIX "%s: open for scanning failed (%d): %s\n",
-					argv[idx+i], errno, strerror(errno));
+					argv[idx+i], errno, herrmsg(msg, sizeof(msg), errno));
 				continue;
 			}
 			estjobs += n;
 		}
 		if((jobs = jobs_alloc(estjobs)) == NULL) exit(-1);
 		for(i = 0; i < files; i++) {
-			int e = 0;
+			int n, e = 0;
 			n = load_checks(argv[idx+i], &jobs[njobs], estjobs-njobs, opt_alg, opt_one == 0, &e);
 			if(n < 0) continue;
 			njobs += n;
@@ -451,21 +545,21 @@ main(int argc, char *argv[]) {
 			running = 1;
 			if((err = pthread_create(&tid, NULL, visualizer, NULL)) != 0) {
 				fprintf(stderr, PREFIX "create visualizer thread failed (%d): %s\n",
-					err, strerror(err));
+					err, herrmsg(msg, sizeof(msg), err));
 				abort();
 			}
 		}
 		/* setup barrier */
 		if((err = pthread_barrier_init(&barrier, NULL, opt_workers+1)) != 0) {
 			fprintf(stderr, PREFIX "create thread failed (%d): %s\n",
-				err, strerror(err));
+				err, herrmsg(msg, sizeof(msg), err));
 			abort();
 		}
 		/* run workers */
 		for(i = 0; i < opt_workers; i++) {
 			if((err = pthread_create(&tid, NULL, worker, NULL)) != 0) {
 				fprintf(stderr, PREFIX "create worker thread failed (%d): %s\n",
-					err, strerror(err));
+					err, herrmsg(msg, sizeof(msg), err));
 				abort();
 			}
 			pthread_detach(tid);

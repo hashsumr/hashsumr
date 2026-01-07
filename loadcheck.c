@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #include "hashsum.h"
 #include "loadcheck.h"
 

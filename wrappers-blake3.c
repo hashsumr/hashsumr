@@ -12,8 +12,6 @@ blake3_new() {
 	return ctx;
 }
 
-typedef EVP_MD * (*evp_md_t )(void);
-
 int
 blake3_init(ctx_t *ctx, void *arg) {
 	blake3_hasher_init(ctx->b3hasher);
@@ -28,7 +26,7 @@ blake3_free(ctx_t *ctx) {
 }
 
 int
-blake3_update(ctx_t *ctx, const void *buf, size_t bufsz) {
+blake3_update(ctx_t *ctx, void *buf, size_t bufsz) {
 	blake3_hasher_update(ctx->b3hasher, buf, bufsz);
 	return 1;
 }

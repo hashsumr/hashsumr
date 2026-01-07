@@ -1,0 +1,34 @@
+CC      = cl
+AR      = lib
+CFLAGS  = /nologo /utf-8 /W4 /Zi /MD
+LDFLAGS = 
+
+PROGS   = hashsum.exe
+
+HASHSUM_OBJS    = main.obj loadcheck.obj hashsum.obj getopt.obj wrappers-openssl.obj wrappers-blake3.obj wrappers-win32.obj
+
+MINIBAR_OBJS	= minibar/minibar.obj
+PTHREAD_COMPAT_OBJS	= pthread_compat/pthread_barrier.obj pthread_compat/pthread_win32.obj
+
+all: $(PROGS)
+
+blake3/blake3.lib:
+	@-mkdir blake3-src\c\build
+	cd blake3-src/c/build && cmake .. -G "NMake Makefiles" \
+		-DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL && nmake
+	@-mkdir blake3
+	copy blake3-src\c\blake3.h .\blake3
+	copy blake3-src\c\build\blake3.lib .\blake3
+	rmdir /s /q blake3-src\c\build
+
+.c.obj:
+	$(CC) $(CFLAGS) /c /Fo$@ $<
+
+hashsum.exe: blake3/blake3.lib $(HASHSUM_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
+	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUM_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib
+
+clean:
+	-del /Q *.obj *.exe *.lib *.pdb *.ilk minibar\*.obj pthread_compat\*.obj
+	-rmdir /S /Q blake3
+
+# debugging: devenv /debugexe main.exe

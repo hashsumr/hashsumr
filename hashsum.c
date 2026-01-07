@@ -2,11 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 #include "hashsum.h"
+#ifdef _WIN32
+#include "wrappers-win32.h"
+#else
 #include "wrappers-openssl.h"
+#endif
 #include "wrappers-blake3.h"
 
 /* available algorithms */
@@ -14,7 +22,20 @@
 #define OPENSSL_XOF32	openssl_new, openssl_init, openssl_free, openssl_update, openssl_final_xof32
 #define OPENSSL_XOF64	openssl_new, openssl_init, openssl_free, openssl_update, openssl_final_xof64
 
+#define BCRYPT_TYPICAL	bcrypt_new, bcrypt_init, bcrypt_free, bcrypt_update, bcrypt_final
+
 md_t algs[] = {
+#ifdef _WIN32
+	{ "SHA1",	BCRYPT_MD5_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHA256",	BCRYPT_SHA256_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHA384",	BCRYPT_SHA384_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHA512",	BCRYPT_SHA512_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHA3/256",	BCRYPT_SHA3_256_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHA3/384",	BCRYPT_SHA3_384_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHA3/512",	BCRYPT_SHA3_512_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHAKE128",	BCRYPT_SHAKE128_ALGORITHM, BCRYPT_TYPICAL },
+	{ "SHAKE256",	BCRYPT_SHAKE256_ALGORITHM, BCRYPT_TYPICAL },
+#else
 	{ "SHA1",	EVP_sha1, OPENSSL_TYPICAL },
 	{ "SHA224",	EVP_sha224, OPENSSL_TYPICAL },
 	{ "SHA256",	EVP_sha256, OPENSSL_TYPICAL },
@@ -35,9 +56,20 @@ md_t algs[] = {
 	{ "BLAKE2b", EVP_blake2b512,  OPENSSL_TYPICAL },
 	{ "BLAKE2s", EVP_blake2s256,  OPENSSL_TYPICAL },
 #endif
+#endif
 	{ "BLAKE3",  NULL, blake3_new, blake3_init, blake3_free, blake3_update, blake3_final },
 	{ NULL, NULL }
 };
+
+char *	/* should be thread-safe */
+herrmsg(char *buf, size_t sz, int errnum) {
+#ifdef _WIN32
+	strerror_s(buf, sizeof(buf), errnum);
+#else
+	snprintf(buf, sz, "%s", strerror(errnum));
+#endif
+	return buf;
+}
 
 md_t *
 get_hashes() {
@@ -48,7 +80,12 @@ md_t *
 lookup_hash(const char *name) {
 	int idx = 0;
 	while(algs[idx].name != NULL) {
-		if(strcasecmp(name, algs[idx].name) == 0) return &algs[idx];
+#ifdef _WIN32
+		if(_stricmp(name, algs[idx].name) == 0)
+#else
+		if(strcasecmp(name, algs[idx].name) == 0)
+#endif
+			return &algs[idx];
 		idx++;
 	}
 	return NULL;
@@ -56,7 +93,8 @@ lookup_hash(const char *name) {
 
 char *
 digest(unsigned char *hash, unsigned int hlen, char *digest, unsigned int dlen) {
-	int i, sz, clen = 0;
+	unsigned int i;
+	int sz, clen = 0;
 	char *wptr = digest;
 	for (i = 0; i < hlen; i++) {
 		sz = snprintf(wptr, dlen-clen, "%02x", hash[i]);
@@ -79,7 +117,7 @@ jobstate(job_t *job, long code, const char *fmt, ...) {
 void *
 hash1(job_t *job, visualizer_t vzer, void *varg) {
 	int fd = -1, sz;
-	unsigned char buf[32768];
+	char buf[32768];
 	struct stat st;
 	ctx_t *ctx = job->md->fnew();
 	long state = STATE_UNKNOWN;
@@ -89,19 +127,22 @@ hash1(job_t *job, visualizer_t vzer, void *varg) {
 	if(stat(job->filename, &st) < 0) {
 		if(errno == ENOENT)
 			return (void *) jobstate(job, ERR_MISSING, "no such file or directory");
-		return (void *) jobstate(job, ERR_STAT, "stat failed (%d): %s", errno, strerror(errno));
+		return (void *) jobstate(job, ERR_STAT, "stat failed (%d): %s", errno,
+			herrmsg(buf, sizeof(buf), errno));
 	}
 
 	if(S_ISREG(st.st_mode) == 0) {
 		if(S_ISDIR(st.st_mode)) {
 			return (void *) jobstate(job, ERR_NOTREG, "is a directory", st.st_mode);
 		}
+#ifndef _WIN32
 		if(S_ISFIFO(st.st_mode)) {
 			return (void *) jobstate(job, ERR_NOTREG, "is a fifo", st.st_mode);
 		}
 		if(S_ISSOCK(st.st_mode)) {
 			return (void *) jobstate(job, ERR_NOTREG, "is a socket", st.st_mode);
 		}
+#endif
 		return (void *) jobstate(job, ERR_NOTREG, "not a regular file (0x%x)", st.st_mode);
 	}
 
@@ -111,9 +152,16 @@ hash1(job_t *job, visualizer_t vzer, void *varg) {
 		return (void *) jobstate(job, ERR_INIT, "hash init failed");
 	}
 
-	if((fd = open(job->filename, O_RDONLY)) < 0) {
-		return (void *) jobstate(job, ERR_OPEN, "open failed (%d): %s", errno, strerror(errno));
+#ifndef _WIN32
+#define _O_BINARY 0
+#endif
+	if((fd = open(job->filename, O_RDONLY|_O_BINARY)) < 0) {
+		return (void *) jobstate(job, ERR_OPEN, "open failed (%d): %s", errno,
+			herrmsg(buf, sizeof(buf), errno));
 	}
+#ifndef _WIN32
+#undef _O_BINARY
+#endif
 
 	while((sz = read(fd, buf, sizeof(buf))) > 0) {
 		if(job->md->fupdate(ctx, buf, sz) != 1) {

@@ -1,25 +1,42 @@
 #ifndef __HASHSUM_H__
 #define __HASHSUM_H__
 
-#include <pthread.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <bcrypt.h>
+#else
 #include <openssl/evp.h>
+#endif
+#include <errno.h>
 #include "blake3/blake3.h"
+#include "pthread_compat/pthread_compat.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#ifndef EVP_MAX_MD_SIZE
+#define EVP_MAX_MD_SIZE	128
+#endif
 #define	HASHSUM_MAX_DIGEST_SIZE EVP_MAX_DIGEST_SIZE
 
 typedef union ctx_s {
+#ifdef _WIN32
+	struct {
+		BCRYPT_ALG_HANDLE hAlg;
+		BCRYPT_HASH_HANDLE hHash;
+		DWORD len;
+	} bcryptHandle;
+#else
 	EVP_MD_CTX *evp;
+#endif
 	blake3_hasher *b3hasher;
 }	ctx_t;
 
 typedef ctx_t* (*ctx_new_t)();
 typedef int    (*ctx_init_t)(ctx_t *ctx, void *arg);
 typedef void   (*ctx_free_t)(ctx_t *ctx);
-typedef int    (*ctx_update_t)(ctx_t *ctx, const void *buf, size_t bufsz);
+typedef int    (*ctx_update_t)(ctx_t *ctx, void *buf, size_t bufsz);
 typedef int    (*ctx_final_t)(ctx_t *ctx, unsigned char *digest, unsigned int *dlen);
 
 typedef struct md_s {
@@ -65,9 +82,25 @@ enum {           // job state codes
 	ERR_FINAL,   // hash final failaed
 };
 
+char * herrmsg(char *buf, size_t sz, int errnum);
+
 md_t * get_hashes();
 md_t * lookup_hash(const char *name);
 void * hash1(job_t *job, visualizer_t vzer, void *varg);
+
+#ifdef _WIN32
+#define open	_open
+#define close	_close
+#define read	_read
+#define strdup	_strdup
+#endif
+
+#ifndef S_ISREG
+#define S_ISREG(x)	((x & S_IFMT) == S_IFREG)
+#endif
+#ifndef S_ISDIR
+#define S_ISDIR(x)	((x & S_IFMT) == S_IFDIR)
+#endif
 
 #ifdef __cplusplus
 }
