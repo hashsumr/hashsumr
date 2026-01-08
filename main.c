@@ -427,11 +427,20 @@ append_argv(char *value, char **argv, int *argc, int *sz) {
 	return argv;
 }
 
+void
+strreplace(char *s, char from, char to) {
+	char *wptr = s;
+	while((wptr = strchr(wptr, from)) != NULL) {
+		*wptr++ = to;
+	}
+}
+
 char **
 expand_files(char *pattern, char **argv, int *argc, int *sz) {
 	HANDLE h;
 	WIN32_FIND_DATA fd;
 	char *value;
+	strreplace(pattern, '/', '\\');
 	if((h = FindFirstFileA(pattern, &fd)) == INVALID_HANDLE_VALUE) {
 		/* no match */
 		return 0;
