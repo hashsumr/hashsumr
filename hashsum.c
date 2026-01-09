@@ -115,39 +115,86 @@ jobstate(job_t *job, long code, const char *fmt, ...) {
 	return code;
 }
 
+int
+get_fileinfo(const char *filename, unsigned long long *sz, int *type) {
+#ifdef _WIN32
+	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+	LARGE_INTEGER li;
+	if(GetFileAttributesExA(filename, GetFileExInfoStandard, &fileInfo) == 0) {
+		DWORD err = GetLastError();
+		switch(err) {
+		case ERROR_FILE_NOT_FOUND:
+		case ERROR_PATH_NOT_FOUND:
+			return ENOENT;
+		case ERROR_ACCESS_DENIED:
+			return EPERM;
+		}
+		return EINVAL;
+	}
+	li.HighPart = fileInfo.nFileSizeHigh;
+	li.LowPart  = fileInfo.nFileSizeLow;
+	*sz = li.QuadPart;
+	if(fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		*type = S_IFDIR;
+	} else if(fileInfo.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+		*type = 0;
+	} else {
+		*type = S_IFREG;
+	}
+#else
+	struct stat st;
+	if(stat(filename, &st) < 0)
+		return errno;
+	*sz = st.st_size;
+	if(S_ISREG(st.st_mode)) {
+		*type = S_IFREG;
+	} else if(S_ISDIR(st.st_mode)) {
+		*type = S_IFDIR;
+	} else if(S_ISSOCK(st.st_mode)) {
+		*type = S_IFSOCK;
+	} else if(S_ISFIFO(st.st_mode)) {
+		*type = S_IFIFO;
+	} else {
+		*type = 0;
+	}
+#endif
+	return 0;
+}
+
 void *
 hash1(job_t *job, visualizer_t vzer, void *varg) {
 	int fd = -1, sz;
 	char buf[32768];
-	struct stat st;
 	ctx_t *ctx = job->md->fnew();
 	long state = STATE_UNKNOWN;
+	int err, ftype;
+	unsigned long long fsize;
 
 	job->checked = 0;
 
-	if(stat(job->filename, &st) < 0) {
-		if(errno == ENOENT)
+	if((err = get_fileinfo(job->filename, &fsize, &ftype)) != 0) {
+		if(err == ENOENT)
 			return (void *) jobstate(job, ERR_MISSING, "no such file or directory");
-		return (void *) jobstate(job, ERR_STAT, "stat failed (%d): %s", errno,
-			herrmsg(buf, sizeof(buf), errno));
+		return (void *) jobstate(job, ERR_STAT, "stat failed (%d): %s", err,
+			herrmsg(buf, sizeof(buf), err));
 	}
 
-	if(S_ISREG(st.st_mode) == 0) {
-		if(S_ISDIR(st.st_mode)) {
-			return (void *) jobstate(job, ERR_NOTREG, "is a directory", st.st_mode);
+	if(ftype != S_IFREG) {
+		if(ftype == S_IFDIR) {
+			return (void *) jobstate(job, ERR_NOTREG, "is a directory");
 		}
 #ifndef _WIN32
-		if(S_ISFIFO(st.st_mode)) {
-			return (void *) jobstate(job, ERR_NOTREG, "is a fifo", st.st_mode);
+		if(ftype == S_IFIFO) {
+			return (void *) jobstate(job, ERR_NOTREG, "is a fifo");
 		}
-		if(S_ISSOCK(st.st_mode)) {
-			return (void *) jobstate(job, ERR_NOTREG, "is a socket", st.st_mode);
+		if(ftype == S_IFSOCK) {
+			return (void *) jobstate(job, ERR_NOTREG, "is a socket");
 		}
 #endif
-		return (void *) jobstate(job, ERR_NOTREG, "not a regular file (0x%x)", st.st_mode);
+		return (void *) jobstate(job, ERR_NOTREG, "not a regular file");
 	}
 
-	job->filesz = st.st_size;
+	job->filesz = fsize;
 
 	if(job->md->finit(ctx, job->md->arginit) != 1) {
 		return (void *) jobstate(job, ERR_INIT, "hash init failed");
