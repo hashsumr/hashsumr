@@ -2,7 +2,11 @@
 #include <string.h>
 #include <fcntl.h>
 #include <ctype.h>
-#ifndef _WIN32
+#include <sys/stat.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#else
 #include <unistd.h>
 #endif
 #include "hashsum.h"
@@ -97,7 +101,11 @@ process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 	job->filename = strdup(name);
 	if(escaped)
 		unescape(job->filename);
+#ifdef _WIN32
+	strncpy_s(job->dcheck, EVP_MAX_DIGEST_SIZE, hash, EVP_MAX_DIGEST_SIZE);
+#else
 	strncpy(job->dcheck, hash, EVP_MAX_DIGEST_SIZE);
+#endif
 	return 0;
 }
 
@@ -108,7 +116,11 @@ scan_checks(const char *filename) {
 	int count_null = 0;
 	size_t sz;
 	char buf[32768];
+#ifdef _WIN32
+	if(_sopen_s(&fd, filename, O_RDONLY|_O_BINARY, _SH_DENYWR, _S_IREAD) != 0) {
+#else
 	if((fd = open(filename, O_RDONLY)) < 0) {
+#endif
 		return -1;
 	}
 	while((sz = read(fd, buf, sizeof(buf))) > 0) {
@@ -138,8 +150,13 @@ load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mu
 	size_t sz, leftover = 0;
 	FILE *fp;
 	char buf[65537];
+#ifdef _WIN32
+	if(fopen_s(&fp, filename, "rb") != 0)
+		return -1;
+#else
 	if((fp = fopen(filename, "rb")) == NULL)
 		return -1;
+#endif
 	while((sz = fread(buf+leftover, 1, sizeof(buf)-leftover-1, fp)) > 0) {
 		size_t total = leftover + sz;
 		size_t start = 0;

@@ -440,7 +440,10 @@ expand_files(char *pattern, char **argv, int *argc, int *sz) {
 	HANDLE h;
 	WIN32_FIND_DATA fd;
 	char *value;
+	char *dirp = NULL;
+	char fullname[256];
 	strreplace(pattern, '/', '\\');
+	dirp = strrchr(pattern, '\\');
 	if((h = FindFirstFileA(pattern, &fd)) == INVALID_HANDLE_VALUE) {
 		/* no match */
 		return 0;
@@ -449,7 +452,15 @@ expand_files(char *pattern, char **argv, int *argc, int *sz) {
 		if(strcmp(fd.cFileName, ".") == 0
 		|| strcmp(fd.cFileName, "..") == 0)
 			continue;
-		if((value = strdup(fd.cFileName)) == NULL) {
+		if(dirp == NULL) {
+			strncpy_s(fullname, sizeof(fullname), fd.cFileName, sizeof(fullname));
+		} else {
+			snprintf(fullname, sizeof(fullname), "%*.*s%s",
+				(int) (dirp-pattern+1),
+				(int) (dirp-pattern+1),
+				pattern, fd.cFileName);
+		}
+		if((value = strdup(fullname)) == NULL) {
 			fprintf(stderr, PREFIX "argv/expand: alloc filename failed\n");
 			exit(-1);
 		}

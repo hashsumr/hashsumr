@@ -89,17 +89,9 @@ md_t * lookup_hash(const char *name);
 void * hash1(job_t *job, visualizer_t vzer, void *varg);
 
 #ifdef _WIN32
-#define open	_open
 #define close	_close
 #define read	_read
 #define strdup	_strdup
-#endif
-
-#ifndef S_ISREG
-#define S_ISREG(x)	((x & S_IFMT) == S_IFREG)
-#endif
-#ifndef S_ISDIR
-#define S_ISDIR(x)	((x & S_IFMT) == S_IFDIR)
 #endif
 
 #ifdef __cplusplus

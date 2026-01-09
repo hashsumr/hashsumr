@@ -200,16 +200,14 @@ hash1(job_t *job, visualizer_t vzer, void *varg) {
 		return (void *) jobstate(job, ERR_INIT, "hash init failed");
 	}
 
-#ifndef _WIN32
-#define _O_BINARY 0
+#ifdef _WIN32
+	if(_sopen_s(&fd, job->filename, O_RDONLY|_O_BINARY, _SH_DENYWR, _S_IREAD) != 0) {
+#else
+	if((fd = open(job->filename, O_RDONLY)) < 0) {
 #endif
-	if((fd = open(job->filename, O_RDONLY|_O_BINARY)) < 0) {
 		return (void *) jobstate(job, ERR_OPEN, "open failed (%d): %s", errno,
 			herrmsg(buf, sizeof(buf), errno));
 	}
-#ifndef _WIN32
-#undef _O_BINARY
-#endif
 
 	while((sz = read(fd, buf, sizeof(buf))) > 0) {
 		if(job->md->fupdate(ctx, buf, sz) != 1) {
