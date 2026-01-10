@@ -7,8 +7,8 @@ PROGS   = hashsumr.exe
 
 HASHSUMR_OBJS    = main.obj loadcheck.obj hashsumr.obj getopt.obj wrappers-openssl.obj wrappers-blake3.obj wrappers-win32.obj
 
-MINIBAR_OBJS	= minibar/minibar.obj
-PTHREAD_COMPAT_OBJS	= pthread_compat/pthread_barrier.obj pthread_compat/pthread_win32.obj
+MINIBAR_OBJS	= minibar.obj
+PTHREAD_COMPAT_OBJS	= pthread_barrier.obj pthread_win32.obj
 
 all: $(PROGS)
 
@@ -21,6 +21,15 @@ blake3/blake3.lib:
 	copy blake3-src\c\build\blake3.lib .\blake3
 	rmdir /s /q blake3-src\c\build
 
+minibar.obj: minibar/minibar.c
+	$(CC) $(CFLAGS) /c /Fo$@ $<
+
+pthread_barrier.obj: pthread_compat/pthread_barrier.c
+	$(CC) $(CFLAGS) /c /Fo$@ $<
+
+pthread_win32.obj: pthread_compat/pthread_win32.c
+	$(CC) $(CFLAGS) /c /Fo$@ $<
+
 .c.obj:
 	$(CC) $(CFLAGS) /c /Fo$@ $<
 
@@ -28,7 +37,7 @@ hashsumr.exe: blake3/blake3.lib $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPA
 	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib
 
 clean:
-	-del /Q *.obj *.exe *.lib *.pdb *.ilk minibar\*.obj pthread_compat\*.obj
+	-del /Q *.obj *.exe *.lib *.pdb *.ilk
 	-rmdir /S /Q blake3
 
 # debugging: devenv /debugexe main.exe
