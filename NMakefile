@@ -3,9 +3,9 @@ AR      = lib
 CFLAGS  = /nologo /utf-8 /W4 /Zi /MD
 LDFLAGS = 
 
-PROGS   = hashsum.exe
+PROGS   = hashsumr.exe
 
-HASHSUM_OBJS    = main.obj loadcheck.obj hashsum.obj getopt.obj wrappers-openssl.obj wrappers-blake3.obj wrappers-win32.obj
+HASHSUMR_OBJS    = main.obj loadcheck.obj hashsumr.obj getopt.obj wrappers-openssl.obj wrappers-blake3.obj wrappers-win32.obj
 
 MINIBAR_OBJS	= minibar/minibar.obj
 PTHREAD_COMPAT_OBJS	= pthread_compat/pthread_barrier.obj pthread_compat/pthread_win32.obj
@@ -24,8 +24,8 @@ blake3/blake3.lib:
 .c.obj:
 	$(CC) $(CFLAGS) /c /Fo$@ $<
 
-hashsum.exe: blake3/blake3.lib $(HASHSUM_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
-	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUM_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib
+hashsumr.exe: blake3/blake3.lib $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
+	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib
 
 clean:
 	-del /Q *.obj *.exe *.lib *.pdb *.ilk minibar\*.obj pthread_compat\*.obj

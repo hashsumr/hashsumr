@@ -9,7 +9,7 @@
 #else
 #include <unistd.h>
 #endif
-#include "hashsum.h"
+#include "hashsumr.h"
 #ifdef _WIN32
 #include "wrappers-win32.h"
 #else
@@ -227,7 +227,7 @@ hash1(job_t *job, visualizer_t vzer, void *varg) {
 		goto cleanup;
 	}
 
-	digest(job->hash, job->hashlen, job->digest, HASHSUM_MAX_DIGEST_SIZE);
+	digest(job->hash, job->hashlen, job->digest, HASHSUMR_MAX_DIGEST_SIZE);
 	state = job->code = STATE_DONE;
 
 cleanup:

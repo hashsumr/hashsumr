@@ -1,7 +1,7 @@
 #ifndef __WRAPPER_WIN32_H__
 #define __WRAPPER_WIN32_H__
 
-#include "hashsum.h"
+#include "hashsumr.h"
 
 #ifdef _WIN32
 /* openssl wrappers */

@@ -1,5 +1,5 @@
-#ifndef __HASHSUM_H__
-#define __HASHSUM_H__
+#ifndef __HASHSUMR_H__
+#define __HASHSUMR_H__
 
 #ifdef _WIN32
 #define _UNICODE
@@ -29,7 +29,7 @@ extern "C" {
 #ifndef EVP_MAX_MD_SIZE
 #define EVP_MAX_MD_SIZE	128
 #endif
-#define	HASHSUM_MAX_DIGEST_SIZE EVP_MAX_DIGEST_SIZE
+#define	HASHSUMR_MAX_DIGEST_SIZE EVP_MAX_DIGEST_SIZE
 
 typedef union ctx_s {
 #ifdef _WIN32
@@ -110,4 +110,4 @@ void * hash1(job_t *job, visualizer_t vzer, void *varg);
 }
 #endif
 
-#endif /* __HASHSUM_H__ */
+#endif /* __HASHSUMR_H__ */

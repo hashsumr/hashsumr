@@ -8,12 +8,12 @@
 #include <getopt.h>
 #endif
 #include <errno.h>
-#include "hashsum.h"
+#include "hashsumr.h"
 #include "loadcheck.h"
 #include "minibar/minibar.h"
 #include "pthread_compat/pthread_compat.h"
 
-#define PREFIX	"hashsum: "
+#define PREFIX	"hashsumr: "
 #define VERSION	"0.0.1"
 
 #ifdef _WIN32
@@ -92,7 +92,7 @@ usage() {
 		algstrlen += sz;
 		wptr += sz;
 	}
-	fprintf(stderr, "Usage: hashsum [OPTION]... [FILE]...\n"
+	fprintf(stderr, "Usage: hashsumr [OPTION]... [FILE]...\n"
 "Print or check hash-based checksums.\n"
 "\n"
 "AVAILABLE ALGORITHMS: (case insensitive)\n"

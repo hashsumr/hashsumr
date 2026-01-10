@@ -1,7 +1,7 @@
 #ifndef __WRAPPER_BLAKE3_H__
 #define __WRAPPER_BLAKE3_H__
 
-#include "hashsum.h"
+#include "hashsumr.h"
 
 /* blake3 wrappers */
 ctx_t* blake3_new();

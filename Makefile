@@ -4,9 +4,9 @@ CC	= gcc
 CFLAGS	= -Wall -g
 LDFLAGS	= -lcrypto -lssl -L./blake3 -lblake3 -lm -pthread
 
-PROGS	= hashsum
+PROGS	= hashsumr
 
-HASHSUM_OBJS	= main.o loadcheck.o hashsum.o wrappers-openssl.o wrappers-blake3.o
+HASHSUMR_OBJS	= main.o loadcheck.o hashsumr.o wrappers-openssl.o wrappers-blake3.o
 
 MINIBAR_OBJS	= minibar/minibar.o
 PTHREAD_COMPAT_OBJS	= pthread_compat/pthread_barrier.o pthread_compat/pthread_win32.o
@@ -30,8 +30,8 @@ blake3/libblake3.a:
 %.o: %.c
 	$(CC) -c -o $@ $(CFLAGS) $<
 
-hashsum: blake3/libblake3.a $(HASHSUM_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
-	$(CC) -o $@ $(HASHSUM_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS)
+hashsumr: blake3/libblake3.a $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
+	$(CC) -o $@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS)
 
 clean:
 	rm -f *.o minibar/*.o pthread_compat/*.o $(PROGS)

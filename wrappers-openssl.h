@@ -1,7 +1,7 @@
 #ifndef __WRAPPER_OPENSSL_H__
 #define __WRAPPER_OPENSSL_H__
 
-#include "hashsum.h"
+#include "hashsumr.h"
 
 /* openssl wrappers */
 ctx_t* openssl_new();

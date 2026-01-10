@@ -9,7 +9,7 @@
 #else
 #include <unistd.h>
 #endif
-#include "hashsum.h"
+#include "hashsumr.h"
 #include "loadcheck.h"
 
 #ifdef _WIN32
