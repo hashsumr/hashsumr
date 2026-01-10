@@ -24,10 +24,10 @@ blake3/blake3.lib:
 minibar.obj: minibar/minibar.c
 	$(CC) $(CFLAGS) /c /Fo$@ $**
 
-pthread_barrier.obj: pthread_compat/pthread_barrier.c
+pthread_barrier.obj: minibar/pthread_compat/pthread_barrier.c
 	$(CC) $(CFLAGS) /c /Fo$@ $**
 
-pthread_win32.obj: pthread_compat/pthread_win32.c
+pthread_win32.obj: minibar/pthread_compat/pthread_win32.c
 	$(CC) $(CFLAGS) /c /Fo$@ $**
 
 .c.obj:

@@ -11,7 +11,7 @@
 #include "hashsumr.h"
 #include "loadcheck.h"
 #include "minibar/minibar.h"
-#include "pthread_compat/pthread_compat.h"
+#include "minibar/pthread_compat/pthread_compat.h"
 
 #define PREFIX	"hashsumr: "
 #define VERSION	"0.0.1"

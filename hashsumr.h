@@ -12,7 +12,7 @@
 #endif
 #include <errno.h>
 #include "blake3/blake3.h"
-#include "pthread_compat/pthread_compat.h"
+#include "minibar/pthread_compat/pthread_compat.h"
 
 #ifdef __cplusplus
 extern "C" {
