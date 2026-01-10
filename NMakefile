@@ -22,16 +22,16 @@ blake3/blake3.lib:
 	rmdir /s /q blake3-src\c\build
 
 minibar.obj: minibar/minibar.c
-	$(CC) $(CFLAGS) /c /Fo$@ $<
+	$(CC) $(CFLAGS) /c /Fo$@ $**
 
 pthread_barrier.obj: pthread_compat/pthread_barrier.c
-	$(CC) $(CFLAGS) /c /Fo$@ $<
+	$(CC) $(CFLAGS) /c /Fo$@ $**
 
 pthread_win32.obj: pthread_compat/pthread_win32.c
-	$(CC) $(CFLAGS) /c /Fo$@ $<
+	$(CC) $(CFLAGS) /c /Fo$@ $**
 
 .c.obj:
-	$(CC) $(CFLAGS) /c /Fo$@ $<
+	$(CC) $(CFLAGS) /c /Fo$@ $**
 
 hashsumr.exe: blake3/blake3.lib $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
 	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib
