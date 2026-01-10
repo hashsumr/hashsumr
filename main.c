@@ -314,7 +314,8 @@ print_check1(job_t *job) {
 			check_failed++;
 		}
 		if(opt_status || (ok && opt_quiet)) return;
-		fprintf(stderr, "%s: %s\n",
+		fprintf(stderr, "(%s) %s: %s\n",
+			job->md->name,
 			job->filename, ok ? "OK" : "FAILED");
 		return;
 	}
