@@ -136,7 +136,7 @@ The following five options are useful only when verifying checksums:
 
 > Hardware: AMD Ryzen 9 5950X CPU + Intel 670P SSD [RAID1]
 
-> Files: FreeBSD 15.0 amd64 Release [files](https://download.freebsd.org/releases/ISO-IMAGES/15.0/) files x10 (14,156,216,784 bytes)
+> Files: FreeBSD 15.0 amd64 Release [files](https://download.freebsd.org/releases/ISO-IMAGES/15.0/) x10 (14,156,216,784 bytes)
 
 > Summary: sha256sum (6.63s) + sha512sum (13.24s) vs. 17 workers (4.28s ~ 4.64x speedup)
 
