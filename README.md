@@ -9,7 +9,7 @@ hashsumr (pronounced hash-summer) is a command-line utility designed for develop
 - ✅ Multi-algorithm support: MD5, SHA1, SHA256, SHA512, BLAKE3, and more
 - ✅ Parallel processing: compute hashes for multiple files at the same time to maximize speed
 - ✅ GNU coreutils compatible: familiar CLI arguments and behavior (--check, --tag, etc.)
-- ✅ Cross-platform: works on Linux, macOS, and Windows
+- ✅ Cross-platform: works on Linux, FreeBSD, macOS, and Windows
 - ✅ Progress bar: visually track hashing progress for large files
 - ✅ Automatic detection: selects the hash algorithm when verifying BSD-style checksum files
 
