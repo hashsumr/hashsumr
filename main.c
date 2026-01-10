@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <locale.h>
 #ifdef _WIN32
 #include <windows.h>
 #include "getopt.h"
@@ -50,6 +51,37 @@ static int check_ok = 0;
 static int check_failed = 0;
 static int check_linerror = 0;
 
+#ifdef _WIN32
+char *
+wchar2utf8(wchar_t *src, char *dst, int sz) {
+	int result;
+	if(src == NULL || dst== NULL || sz < 0)
+		return NULL;
+	result = WideCharToMultiByte(CP_UTF8,
+		0, src, -1, dst, sz, NULL, NULL);
+	if(result == 0) return NULL;
+	return dst;
+}
+
+char *
+wchar2utf8_alloc(wchar_t *src) {
+	int size_needed, result;
+	char *utf8;
+	if(src == NULL) return NULL;
+	size_needed = WideCharToMultiByte(CP_UTF8,
+		0, src, -1, NULL, 0, NULL, NULL);
+	if(size_needed <= 0) return NULL;
+	if((utf8 = (char*) malloc(size_needed)) == NULL) return NULL;
+	result = WideCharToMultiByte(CP_UTF8,
+		0, src, -1, utf8, size_needed, NULL, NULL);
+	if(result == 0) {
+		free(utf8);
+		return NULL;
+	}
+	return utf8;
+}
+#endif
+
 int
 usage() {
 	int algstrlen = 0;
@@ -95,60 +127,67 @@ usage() {
 }
 
 int
-parse_opts(int argc, char *argv[]) {
+parse_opts(int argc, TCHAR *argv[]) {
 	md_t *a;
 	int ch, optidx = 0;
+#ifdef _WIN32
+	char buf[64];
+#endif
 	static struct option opts[] = {
-		{ "one",             no_argument, NULL, '1' },
-		{ "algorithm", required_argument, NULL, 'a' },
-		{ "binary",          no_argument, NULL, 'b' },
-		{ "check",           no_argument, NULL, 'c' },
-		{ "gnu",             no_argument, NULL,  0  },
-		{ "tag",             no_argument, NULL,  0  },
-		{ "text",            no_argument, NULL, 't' },
-		{ "zero",            no_argument, NULL, 'z' },
-		{ "workers",   required_argument, NULL,  0  },
-		{ "np",              no_argument, NULL,  0  },
-		{ "ignore-missing",  no_argument, NULL,  0  },
-		{ "quiet",           no_argument, NULL, 'q' },
-		{ "status",          no_argument, NULL,  0  },
-		{ "strict",          no_argument, NULL,  0  },
-		{ "warn",            no_argument, NULL, 'w' },
-		{ "help",            no_argument, NULL, 'h' },
-		{ "version",         no_argument, NULL, 'v' },
+		{ _T("one"),             no_argument, NULL, _T('1') },
+		{ _T("algorithm"), required_argument, NULL, _T('a') },
+		{ _T("binary"),          no_argument, NULL, _T('b') },
+		{ _T("check"),           no_argument, NULL, _T('c') },
+		{ _T("gnu"),             no_argument, NULL,     0   },
+		{ _T("tag"),             no_argument, NULL,     0   },
+		{ _T("text"),            no_argument, NULL, _T('t') },
+		{ _T("zero"),            no_argument, NULL, _T('z') },
+		{ _T("workers"),   required_argument, NULL,     0   },
+		{ _T("np"),              no_argument, NULL,     0   },
+		{ _T("ignore-missing"),  no_argument, NULL,     0   },
+		{ _T("quiet"),           no_argument, NULL, _T('q') },
+		{ _T("status"),          no_argument, NULL,     0   },
+		{ _T("strict"),          no_argument, NULL,     0   },
+		{ _T("warn"),            no_argument, NULL, _T('w') },
+		{ _T("help"),            no_argument, NULL, _T('h') },
+		{ _T("version"),         no_argument, NULL, _T('v') },
 		{ 0, 0 }
 	};
 	if(argc < 2) {
 		return usage();
 	}
-	while((ch = getopt_long(argc, argv, "1a:bctzqwhv", opts, &optidx)) != -1) {
+#ifdef _WIN32
+#define strcmp	wcscmp
+#define strtol	wcstol
+#endif
+	while((ch = getopt_long(argc, argv, _T("1a:bctzqwhv"), opts, &optidx)) != -1) {
 		switch(ch) {
 		case 0: /* for longopts */
-			if(strcmp(opts[optidx].name, "tag") == 0) {
+			if(strcmp(opts[optidx].name, _T("tag")) == 0) {
 				opt_tag = 1;
-			} else if(strcmp(opts[optidx].name, "gnu") == 0) {
+			} else if(strcmp(opts[optidx].name, _T("gnu")) == 0) {
 				opt_tag = 0;
-			} else if(strcmp(opts[optidx].name, "np") == 0) {
+			} else if(strcmp(opts[optidx].name, _T("np")) == 0) {
 				opt_np = 1;
-			} else if(strcmp(opts[optidx].name, "workers") == 0) {
+			} else if(strcmp(opts[optidx].name, _T("workers")) == 0) {
 				opt_workers = strtol(optarg, NULL, 0);
 				if(opt_workers < 0) opt_workers = 0;
-			} else if(strcmp(opts[optidx].name, "ignore-missing") == 0) {
+			} else if(strcmp(opts[optidx].name, _T("ignore-missing")) == 0) {
 				opt_ignore_missing = 1;
-			} else if(strcmp(opts[optidx].name, "status") == 0) {
+			} else if(strcmp(opts[optidx].name, _T("status")) == 0) {
 				opt_status = 1;
 				opt_np = 1;
-			} else if(strcmp(opts[optidx].name, "strict") == 0) {
+			} else if(strcmp(opts[optidx].name, _T("strict")) == 0) {
 				opt_strict = 1;
 			}
 			break;
-		case '1':
+		case _T('1'):
 			opt_one = 1;
 			break;
-		case 'a':
+		case _T('a'):
 			for(a = get_hashes(); a->name != NULL; a++) {
 #ifdef _WIN32
-				if(_stricmp(a->name, optarg) == 0) {
+				if(_stricmp(a->name, wchar2utf8(optarg, buf, sizeof(buf))) == 0) {
 #else
 				if(strcasecmp(a->name, optarg) == 0) {
 #endif
@@ -157,33 +196,38 @@ parse_opts(int argc, char *argv[]) {
 				}
 			}
 			if(a->name == NULL) {
-				fprintf(stderr, PREFIX "unsupported algorithm `%s'.\n", optarg); 
+#ifdef _WIN32
+				fprintf(stderr, PREFIX);
+				fwprintf(stderr, L"unsupported algorithm `%s'.\n", optarg);
+#else
+				fprintf(stderr, PREFIX "unsupported algorithm `%s'.\n", optarg);
+#endif
 				exit(-1);
 			}
 			break;
-		case 'b':
+		case _T('b'):
 			opt_bin = 1;
 			break;
-		case 'c':
+		case _T('c'):
 			opt_check = 1;
 			break;
-		case 't':
+		case _T('t'):
 			/* XXX: not implemented - opt_bin = 0 */
 			break;
-		case 'z':
+		case _T('z'):
 			opt_zero = 1;
 			break;
-		case 'q':
+		case _T('q'):
 			opt_quiet = 1;
 			opt_np = 1;
 			break;
-		case 'w':
+		case _T('w'):
 			opt_warn = 1;
 			break;
-		case 'v':
+		case _T('v'):
 			fprintf(stderr, PREFIX "version " VERSION "\n");
 			break;
-		case 'h':
+		case _T('h'):
 		default:
 			usage();
 			exit(1);
@@ -192,6 +236,10 @@ parse_opts(int argc, char *argv[]) {
 	argc -= optind;
 	argv += optind;
 	return optind;
+#ifdef _WIN32
+#undef strcmp
+#undef wcstol
+#endif
 }
 
 int
@@ -414,10 +462,10 @@ jobs_alloc(int n) {
 }
 
 #ifdef _WIN32
-char **
-append_argv(char *value, char **argv, int *argc, int *sz) {
+wchar_t **
+append_argv(wchar_t *value, wchar_t **argv, int *argc, int *sz) {
 	if(*argc == *sz) {
-		if((argv = (char**) realloc(argv, sizeof(char*) * ((*sz) + 16))) == NULL) {
+		if((argv = (wchar_t**) realloc(argv, sizeof(wchar_t*) * ((*sz) + 16))) == NULL) {
 			fprintf(stderr, PREFIX "argv/append: realloc failed\n");
 			exit(-1);
 		}
@@ -428,59 +476,60 @@ append_argv(char *value, char **argv, int *argc, int *sz) {
 }
 
 void
-strreplace(char *s, char from, char to) {
-	char *wptr = s;
-	while((wptr = strchr(wptr, from)) != NULL) {
+strreplace(wchar_t *s, wchar_t from, wchar_t to) {
+	wchar_t *wptr = s;
+	while((wptr = wcschr(wptr, from)) != NULL) {
 		*wptr++ = to;
 	}
 }
 
-char **
-expand_files(char *pattern, char **argv, int *argc, int *sz) {
+wchar_t **
+expand_files(wchar_t *pattern, wchar_t **argv, int *argc, int *sz) {
 	HANDLE h;
-	WIN32_FIND_DATA fd;
-	char *value;
-	char *dirp = NULL;
-	char fullname[256];
-	strreplace(pattern, '/', '\\');
-	dirp = strrchr(pattern, '\\');
-	if((h = FindFirstFileA(pattern, &fd)) == INVALID_HANDLE_VALUE) {
+	WIN32_FIND_DATAW fd;
+	wchar_t *value;
+	wchar_t *dirp = NULL;
+	wchar_t fullname[256];
+	strreplace(pattern, L'/', L'\\');
+	dirp = wcsrchr(pattern, L'\\');
+	if((h = FindFirstFileW(pattern, &fd)) == INVALID_HANDLE_VALUE) {
 		/* no match */
 		return 0;
 	}
 	do {
-		if(strcmp(fd.cFileName, ".") == 0
-		|| strcmp(fd.cFileName, "..") == 0)
+		if(wcscmp(fd.cFileName, L".") == 0
+		|| wcscmp(fd.cFileName, L"..") == 0)
 			continue;
 		if(dirp == NULL) {
-			strncpy_s(fullname, sizeof(fullname), fd.cFileName, sizeof(fullname));
+			wcscpy_s(fullname, sizeof(fullname)/sizeof(wchar_t), fd.cFileName);
 		} else {
-			snprintf(fullname, sizeof(fullname), "%*.*s%s",
+			_snwprintf_s(fullname, sizeof(fullname), _TRUNCATE,
+				L"%*.*s%s",
 				(int) (dirp-pattern+1),
 				(int) (dirp-pattern+1),
 				pattern, fd.cFileName);
 		}
-		if((value = strdup(fullname)) == NULL) {
+		if((value = _wcsdup(fullname)) == NULL) {
 			fprintf(stderr, PREFIX "argv/expand: alloc filename failed\n");
 			exit(-1);
 		}
 		argv = append_argv(value, argv, argc, sz);
-	} while(FindNextFileA(h, &fd));
+	} while(FindNextFileW(h, &fd));
 	FindClose(h);
 	return argv;
 }
 
-char **
-expand_args(int *argc, char *argv[]) {
+wchar_t **
+expand_args(int *argc, wchar_t *argv[]) {
 	int i, n, newargc = 0, sz = 16;
-	char **newargv = NULL;
+	wchar_t **newargv = NULL;
 	if(argc == NULL) return NULL;
-	if((newargv = (char **) malloc(sizeof(char*) * sz)) == NULL)
+	if((newargv = (wchar_t **) malloc(sizeof(wchar_t*) * sz)) == NULL)
 		return NULL;
 	newargc = 0;
 	for(i = 0; i < *argc; i++) {
-		if(strchr(argv[i], '*') == NULL
-		&& strchr(argv[i], '?') == NULL) {
+		if(wcschr(argv[i], L'*') == NULL
+		&& wcschr(argv[i], L'?') == NULL) {
 			newargv = append_argv(argv[i], newargv, &newargc, &sz);
 			continue;
 		}
@@ -492,12 +541,20 @@ expand_args(int *argc, char *argv[]) {
 #endif
 
 int
+#ifdef _WIN32
+wmain(int argc, wchar_t *argv[]) {
+#else
 main(int argc, char *argv[]) {
+#endif
 	int i, idx, err;
 	int ncores = get_ncores();
 	char msg[128];
 	pthread_t tid;
-
+#ifdef _WIN32
+	setlocale(LC_ALL, ".UTF-8");
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+#endif
 	if((opt_alg = lookup_hash("SHA256")) == NULL) {
 		fprintf(stderr, PREFIX "FATAL: cannot find the default algorithm.\n");
 		return -1;
@@ -515,7 +572,12 @@ main(int argc, char *argv[]) {
 			if(opt_one == 0)
 				pthread_mutex_init(&jobs[i].mutex, NULL);
 			jobs[i].md = opt_alg;
+#ifdef _WIN32
+			jobs[i].wfilename = _wcsdup(argv[idx+i]);
+			jobs[i].filename = wchar2utf8_alloc(argv[idx+i]);
+#else
 			jobs[i].filename = strdup(argv[idx+i]);
+#endif
 		}
 	} else {
 		/* TODO */
@@ -524,8 +586,16 @@ main(int argc, char *argv[]) {
 		for(i = 0; i < files; i++) {
 			int n = scan_checks(argv[idx+i]);
 			if(n < 0) {
+#ifdef _WIN32
+				fprintf(stderr, PREFIX);
+				fwprintf(stderr, L"%s: open for scanning failed (%d): ",
+					argv[idx+1], errno);
+				fprintf(stderr, "%s\n",
+					herrmsg(msg, sizeof(msg), errno));
+#else
 				fprintf(stderr, PREFIX "%s: open for scanning failed (%d): %s\n",
 					argv[idx+i], errno, herrmsg(msg, sizeof(msg), errno));
+#endif
 				continue;
 			}
 			estjobs += n;

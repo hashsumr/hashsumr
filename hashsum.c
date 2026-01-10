@@ -116,11 +116,11 @@ jobstate(job_t *job, long code, const char *fmt, ...) {
 }
 
 int
-get_fileinfo(const char *filename, unsigned long long *sz, int *type) {
+get_fileinfo(const TCHAR *filename, unsigned long long *sz, int *type) {
 #ifdef _WIN32
 	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
 	LARGE_INTEGER li;
-	if(GetFileAttributesExA(filename, GetFileExInfoStandard, &fileInfo) == 0) {
+	if(GetFileAttributesExW(filename, GetFileExInfoStandard, &fileInfo) == 0) {
 		DWORD err = GetLastError();
 		switch(err) {
 		case ERROR_FILE_NOT_FOUND:
@@ -172,7 +172,11 @@ hash1(job_t *job, visualizer_t vzer, void *varg) {
 
 	job->checked = 0;
 
+#ifdef _WIN32
+	if((err = get_fileinfo(job->wfilename, &fsize, &ftype)) != 0) {
+#else
 	if((err = get_fileinfo(job->filename, &fsize, &ftype)) != 0) {
+#endif
 		if(err == ENOENT)
 			return (void *) jobstate(job, ERR_MISSING, "no such file or directory");
 		return (void *) jobstate(job, ERR_STAT, "stat failed (%d): %s", err,
@@ -201,7 +205,7 @@ hash1(job_t *job, visualizer_t vzer, void *varg) {
 	}
 
 #ifdef _WIN32
-	if(_sopen_s(&fd, job->filename, O_RDONLY|_O_BINARY, _SH_DENYWR, _S_IREAD) != 0) {
+	if(_wsopen_s(&fd, job->wfilename, O_RDONLY|_O_BINARY, _SH_DENYWR, _S_IREAD) != 0) {
 #else
 	if((fd = open(job->filename, O_RDONLY)) < 0) {
 #endif

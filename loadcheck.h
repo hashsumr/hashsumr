@@ -3,7 +3,7 @@
 
 #include "hashsum.h"
 
-int scan_checks(const char *filename);
-int load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mutex, int *err);
+int scan_checks(const TCHAR *filename);
+int load_checks(const TCHAR *filename, job_t *jobs, int njobs, md_t *alg, int init_mutex, int *err);
 
 #endif

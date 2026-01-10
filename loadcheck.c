@@ -12,6 +12,19 @@
 #include "hashsum.h"
 #include "loadcheck.h"
 
+#ifdef _WIN32
+wchar_t *
+utf82wchar(char *src, wchar_t *dst, int sz) {
+	int result;
+	if(src == NULL || dst== NULL || sz < 0)
+		return NULL;
+	result = MultiByteToWideChar(CP_UTF8,
+		MB_ERR_INVALID_CHARS, src, -1, dst, sz);
+	if(result == 0) return NULL;
+	return dst;
+}
+#endif
+
 int
 is_hex_string(const char *s) {
 	const char *ptr;
@@ -62,6 +75,9 @@ int
 process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 	int escaped = 0;
 	char *ptr, *name, *hash = NULL;
+#ifdef _WIN32
+	wchar_t buf[4096];
+#endif
 	/* escaped? */
 	if(line[0] == '\\') {
 		line++;
@@ -102,6 +118,7 @@ process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 	if(escaped)
 		unescape(job->filename);
 #ifdef _WIN32
+	job->wfilename = _wcsdup(utf82wchar(job->filename, buf, sizeof(buf)/sizeof(wchar_t)));
 	strncpy_s(job->dcheck, EVP_MAX_DIGEST_SIZE, hash, EVP_MAX_DIGEST_SIZE);
 #else
 	strncpy(job->dcheck, hash, EVP_MAX_DIGEST_SIZE);
@@ -110,14 +127,14 @@ process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 }
 
 int
-scan_checks(const char *filename) {
+scan_checks(const TCHAR *filename) {
 	int fd;
 	int count_nl = 0;
 	int count_null = 0;
 	size_t sz;
 	char buf[32768];
 #ifdef _WIN32
-	if(_sopen_s(&fd, filename, O_RDONLY|_O_BINARY, _SH_DENYWR, _S_IREAD) != 0) {
+	if(_wsopen_s(&fd, filename, O_RDONLY|_O_BINARY, _SH_DENYWR, _S_IREAD) != 0) {
 #else
 	if((fd = open(filename, O_RDONLY)) < 0) {
 #endif
@@ -145,13 +162,13 @@ scan_checks(const char *filename) {
 }
 
 int
-load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mutex, int *err) {
+load_checks(const TCHAR *filename, job_t *jobs, int njobs, md_t *alg, int init_mutex, int *err) {
 	int count = 0, error = 0;
 	size_t sz, leftover = 0;
 	FILE *fp;
 	char buf[65537];
 #ifdef _WIN32
-	if(fopen_s(&fp, filename, "rb") != 0)
+	if(_wfopen_s(&fp, filename, L"rb") != 0)
 		return -1;
 #else
 	if((fp = fopen(filename, "rb")) == NULL)
@@ -161,6 +178,7 @@ load_checks(const char *filename, job_t *jobs, int njobs, md_t *alg, int init_mu
 		size_t total = leftover + sz;
 		size_t start = 0;
 		for (size_t i = 0; i < total; i++) {
+			if(buf[i] == '\r') buf[i] = '\0';
 			if(buf[i] == '\0' || buf[i] == '\n') {
 				buf[i] = '\0';
 				if(process_line(buf+start, &jobs[count], alg, init_mutex) == 0)

@@ -2,8 +2,11 @@
 #define __HASHSUM_H__
 
 #ifdef _WIN32
+#define _UNICODE
+#define UNICODE
 #include <windows.h>
 #include <bcrypt.h>
+#include <wchar.h>
 #else
 #include <openssl/evp.h>
 #endif
@@ -13,6 +16,14 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef WIN32
+#define TCHAR	wchar_t
+#define _T(x)	L##x
+#else
+#define	TCHAR	char
+#define _T(x)	x
 #endif
 
 #ifndef EVP_MAX_MD_SIZE
@@ -56,6 +67,7 @@ typedef struct job_s {
 	pthread_mutex_t mutex;
 	md_t *md;
 	char *filename;
+	wchar_t *wfilename;
 	unsigned long long checked;
 	unsigned long long filesz;
 	long code;	/* job state code */

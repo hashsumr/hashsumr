@@ -4,23 +4,23 @@
 #include "getopt.h"
 
 int optind = 1;       // Index of next argv element
-char *optarg = NULL;  // Option argument
+wchar_t *optarg = NULL;  // Option argument
 
 // Example minimal parsing function
 int
-getopt_long(int argc, char **argv, const char *optstring,
+getopt_long(int argc, wchar_t **argv, const wchar_t *optstring,
 	const struct option *longopts, int *longindex)
 {
 	if (optind >= argc) return -1;
 
-	char *arg = argv[optind];
+	wchar_t *arg = argv[optind];
 
 	// Long option
-	if (strncmp(arg, "--", 2) == 0) {
+	if (wcsncmp(arg, L"--", 2) == 0) {
 		arg += 2;
 		for (int i = 0; longopts[i].name != NULL; i++) {
-			size_t len = strlen(longopts[i].name);
-			if (strncmp(arg, longopts[i].name, len) == 0) {
+			size_t len = wcslen(longopts[i].name);
+			if (wcsncmp(arg, longopts[i].name, len) == 0) {
 				if (longindex) *longindex = i;
 				optind++;
 				// Handle required argument
@@ -28,8 +28,8 @@ getopt_long(int argc, char **argv, const char *optstring,
 					if (optind < argc) {
 						optarg = argv[optind++];
 					} else {
-						fprintf(stderr, "Option '--%s' requires an argument\n", longopts[i].name);
-						return '?';
+						fwprintf(stderr, L"Option '--%s' requires an argument\n", longopts[i].name);
+						return L'?';
 					}
 				} else {
 					optarg = NULL;
@@ -37,29 +37,29 @@ getopt_long(int argc, char **argv, const char *optstring,
 				return longopts[i].val;
 			}
 		}
-		fprintf(stderr, "Unknown option: %s\n", arg);
+		fwprintf(stderr, L"Unknown option: %s\n", arg);
 		optind++;
 		return '?';
 	}
 
 	// Short option
-	if (arg[0] == '-' && arg[1] != '\0') {
-		char opt = arg[1];
-		const char *p = strchr(optstring, opt);
+	if (arg[0] == L'-' && arg[1] != L'\0') {
+		wchar_t opt = arg[1];
+		const wchar_t *p = wcschr(optstring, opt);
 		if (!p) {
-			fprintf(stderr, "Unknown option: -%c\n", opt);
+			fwprintf(stderr, L"Unknown option: -%c\n", opt);
 			optind++;
 			return '?';
 		}
-		if (*(p + 1) == ':') { // option requires argument
-			if (arg[2] != '\0') { // e.g., -fvalue
+		if (*(p + 1) == L':') { // option requires argument
+			if (arg[2] != L'\0') { // e.g., -fvalue
 				optarg = &arg[2];
 			} else if (optind + 1 < argc) { // next argv
 				optarg = argv[++optind];
 			} else {
-				fprintf(stderr, "Option -%c requires an argument\n", opt);
+				fwprintf(stderr, L"Option -%c requires an argument\n", opt);
 				optind++;
-				return '?';
+				return L'?';
 			}
 		} else {
 			optarg = NULL;
