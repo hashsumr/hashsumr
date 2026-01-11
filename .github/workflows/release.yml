@@ -1,4 +1,4 @@
-name: Build Linux static binary (amd64 & arm64)
+name: Release
 
 on:
   push:
