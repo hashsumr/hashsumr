@@ -116,5 +116,5 @@ jobs:
         with:
           files: |
             release/hashsumr-*.tar.gz
-            release/hashrumr-*.zip
+            release/hashsumr-*.zip
 
