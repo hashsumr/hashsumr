@@ -1,4 +1,4 @@
-name: Build Windows binary
+name: Build Windows binary (amd64 & arm64)
 
 on:
   workflow_dispatch:
