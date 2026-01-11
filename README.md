@@ -83,7 +83,8 @@ OPTION: (* - not implemented, for compatibility only)
   -z, --zero            end each output line with NUL, not newline,
                           and disable file name escaping
       --workers         set the number or parallel workers
-      --np              no progress bar
+      --np              no progress bar (default)
+  -p, --progress        show progress bar
 
 The following five options are useful only when verifying checksums:
       --ignore-missing  don't fail or report status for missing files
