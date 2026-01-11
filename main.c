@@ -330,7 +330,8 @@ print_check1(job_t *job) {
 		return;
 	if(job->code == ERR_MISSING && opt_ignore_missing)
 		return;
-	fprintf(stderr, PREFIX "%s: %s\n",
+	fprintf(stderr, "(%s) %s: %s\n",
+		job->md == NULL ? job->mdname : job->md->name,
 		job->filename,
 		job->errmsg);
 }

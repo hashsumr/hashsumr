@@ -99,8 +99,11 @@ process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 		*ptr = '\0';
 		*name = '\0';
 		name += 2;
-		if((job->md = lookup_hash(line)) == NULL)
-			return -1;
+		if((job->md = lookup_hash(line)) == NULL) {
+			job->mdname = strdup(line);
+		} else {
+			job->mdname = job->md->name;
+		}
 	} else {
 		/* non-bsd-style - hash; ' '; ' ' or '*'; filename */
 		if((ptr = strchr(line, ' ')) == NULL)  return -1;
@@ -110,6 +113,7 @@ process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 		hash = line;
 		name = ptr+2;
 		job->md = alg;
+		job->mdname = alg->name;
 	}
 	/* fill the rest of job fields */
 	if(init_mutex)

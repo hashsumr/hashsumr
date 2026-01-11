@@ -65,6 +65,7 @@ typedef struct md_s {
 
 typedef struct job_s {
 	pthread_mutex_t mutex;
+	const char *mdname;
 	md_t *md;
 	char *filename;
 	wchar_t *wfilename;
@@ -85,6 +86,7 @@ typedef void   (*visualizer_t)(job_t *job, void *arg);
 enum {           // job state codes
 	STATE_UNKNOWN = 0,
 	STATE_DONE,	 // done!
+	ERR_ALG,     // unsupported algorithm
 	ERR_STAT,    // stat(2) failed
 	ERR_MISSING, // file not found
 	ERR_NOTREG,  // not a regular file

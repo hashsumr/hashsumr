@@ -165,11 +165,15 @@ void *
 hash1(job_t *job, visualizer_t vzer, void *varg) {
 	int fd = -1, sz;
 	char buf[32768];
-	ctx_t *ctx = job->md->fnew();
+	ctx_t *ctx = NULL;
 	long state = STATE_UNKNOWN;
 	int err, ftype;
 	unsigned long long fsize;
 
+	if(job->md == NULL) {
+		return (void *) jobstate(job, ERR_ALG, "unsupported algorithm (%s)", job->mdname);
+	}
+	ctx = job->md->fnew();
 	job->checked = 0;
 
 #ifdef _WIN32
