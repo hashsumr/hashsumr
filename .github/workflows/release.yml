@@ -48,7 +48,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          token: ${{ secrets.GH_TOKEN }}
           files: hashsumr-linux-${{ matrix.arch }}-static
 
   build-win:
@@ -84,7 +83,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          token: ${{ secrets.GH_TOKEN }}
           files: hashsumr-${{ matrix.arch }}.exe
 
   package-source:
@@ -124,7 +122,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          token: ${{ secrets.GH_TOKEN }}
           files: |
             release/hashsumr-*.tar.gz
             release/hashsumr-*.zip
