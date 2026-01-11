@@ -96,9 +96,9 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           NAME=hashsumr-${VERSION}
-          find . -name '.git*' -exec rm -rf {} \;
+          find . -name '.git*' -exec rm -rf {} \; || true
           mkdir "$NAME"
-          mv * "$NAME/"
+          mv * "$NAME/" || true
           mkdir release
           tar czf "release/$NAME.tar.gz" "$NAME"
           zip -ur9 "release/$NAME.zip" "$NAME"
