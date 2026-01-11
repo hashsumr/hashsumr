@@ -48,7 +48,7 @@ Install [Visual Studio Community](https://visualstudio.microsoft.com/vs/communit
 - General instructions
 
   ```
-  git clone https://github.com/hashsumr/hashsumr.git
+  git clone --recursive https://github.com/hashsumr/hashsumr.git
   cd hashsumr
   make all
   cp hashsumr /path/to/install/
