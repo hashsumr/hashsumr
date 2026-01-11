@@ -2,7 +2,7 @@
 UNAME_S	= $(shell uname -s)
 CC	= gcc
 CFLAGS	= -Wall -g
-LDFLAGS	= -lcrypto -lssl -L./blake3 -lblake3 -lm -pthread
+LDFLAGS	= -lssl -lcrypto -L./blake3 -lblake3 -lm -pthread
 
 PROGS	= hashsumr
 
@@ -39,7 +39,11 @@ pthread_%.o: minibar/pthread_compat/pthread_%.c
 hashsumr: blake3/libblake3.a $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
 	$(CC) -o $@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS)
 
+# for alpine build
+hashsumr-static: blake3/libblake3.a $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
+	$(CC) -o $@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) -static-pie
+
 clean:
-	rm -f *.o $(PROGS)
+	rm -f *.o $(PROGS) hashsumr-static
 	rm -rf ./blake3
 
