@@ -19,7 +19,7 @@ hashsumr (pronounced hash-summer) is a command-line utility designed for develop
 
 #### Linux
 
-- Alpine: `apk add git make cmake gcc g++ musl-dev openssl-dev`
+- Alpine: `apk add git make cmake gcc g++ musl-dev openssl-dev openssl-libs-static`
 - archlinux: `pacman -S git make cmake gcc openssl`
 - Debian/Ubuntu: `apt install git make cmake gcc g++ libssl-dev`
 - Fedora: `dnf install git make cmake gcc g++ openssl-devel`
@@ -48,7 +48,7 @@ Install [Visual Studio Community](https://visualstudio.microsoft.com/vs/communit
 - General instructions
 
   ```
-  git clone https://github.com/hashsumr/hashsumr.git
+  git clone --recursive https://github.com/hashsumr/hashsumr.git
   cd hashsumr
   make all
   cp hashsumr /path/to/install/
