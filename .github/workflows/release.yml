@@ -49,6 +49,8 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           files: hashsumr-linux-${{ matrix.arch }}-static
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   build-win:
     runs-on: windows-latest
@@ -84,6 +86,8 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           files: hashsumr-${{ matrix.arch }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   package-source:
     runs-on: ubuntu-latest
@@ -125,4 +129,6 @@ jobs:
           files: |
             release/hashsumr-*.tar.gz
             release/hashsumr-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
