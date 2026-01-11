@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-static-amd64:
+  build-linux-static:
     runs-on: ubuntu-latest
     strategy:
       matrix:
