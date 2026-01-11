@@ -27,7 +27,8 @@ jobs:
           docker run --rm --platform linux/${{ matrix.arch }} \
             -v $PWD:/build -w /build alpine:latest \
             sh -c "apk update && apk add --no-cache \
-                   git make cmake gcc g++ musl-dev openssl-dev openssl-libs-static file \
+                     git make cmake gcc g++ musl-dev openssl-dev openssl-libs-static \
+                     file && \
                    make hashsumr-static && \
                    strip hashsumr-static && \
                    mv hashsumr-static hashsumr-linux-${{ matrix.arch }}-static"
