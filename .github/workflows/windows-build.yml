@@ -11,11 +11,13 @@ jobs:
         arch: [ amd64, arm64 ]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
-      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Setup VS development runtime
+        uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch == 'arm64' && 'amd64_arm64' || 'amd64' }}
 
