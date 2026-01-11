@@ -1,0 +1,49 @@
+name: Build Linux static binary (amd64 & arm64)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-static-amd64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [ amd64, arm64]
+
+    container:
+      image: alpine:latest
+      platform: ${{ matrix.arch == 'arm64' && 'linux/arm64' || 'linux/amd64' }}
+      options: --privileged
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          apk update
+          apk add --no-cache \
+            git make cmake gcc g++ musl-dev openssl-dev openssl-libs-static \
+            file
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Build static hashsumr
+        env:
+          CC: gcc
+        run: |
+          make hashsumr-static
+          strip hashsumr-static
+          mv hashsumr-static hashsumr-linux-${{ matrix.arch }}-static
+
+      - name: Verify static binary
+        run: |
+          file hashsumr-linux-${{ matrix.arch }}-static
+          ldd hashsumr-linux-${{ matrix.arch }}-static || echo "static binary (expected)"
+
+      - name: Upload static binary (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashsumr-linux-${{ matrix.arch }}-static
+          path: hashsumr-linux-${{ matrix.arch }}-static
+
