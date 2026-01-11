@@ -1,8 +1,6 @@
 name: Build Linux static binary (amd64 & arm64)
 
 on:
-  push:
-    tags: [ "v*" ]
   workflow_dispatch:
 
 jobs:
@@ -35,15 +33,9 @@ jobs:
                    strip hashsumr-static && \
                    mv hashsumr-static hashsumr-linux-${{ matrix.arch }}-static"
 
-      - name: Upload static binary (artifact)
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hashsumr-linux-${{ matrix.arch }}-static
           path: hashsumr-linux-${{ matrix.arch }}-static
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
-        with:
-          files: hashsumr-linux-${{ matrix.arch }}-static
 
