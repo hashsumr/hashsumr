@@ -20,6 +20,7 @@ endif
 all: $(PROGS)
 
 blake3/libblake3.a:
+	-rm -rf blake3-src/c/build
 	mkdir -p blake3-src/c/build
 	(cd blake3-src/c/build && cmake .. && make)
 	@-mkdir ./blake3

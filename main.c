@@ -226,6 +226,8 @@ parse_opts(int argc, TCHAR *argv[]) {
 			break;
 		case _T('v'):
 			fprintf(stderr, PREFIX "version " VERSION "\n");
+			fflush(stderr);
+			exit(1);
 			break;
 		case _T('h'):
 		default:
