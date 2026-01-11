@@ -96,19 +96,24 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           NAME=hashsumr-${VERSION}
+          find . -name '.git*' -exec rm -rf {} \;
           mkdir "$NAME"
-          rsync -a --exclude='.git*' ./ "$NAME/"
+          mv * "$NAME/"
           mkdir release
           tar czf "release/$NAME.tar.gz" "$NAME"
           zip -ur9 "release/$NAME.zip" "$NAME"
 
-      - name: Upload artifact
+      - name: Upload artifact (tar.gz)
         uses: actions/upload-artifact@v4
         with:
-          name: source codes
-          path: |
-            release/hashsumr-*.tar.gz
-            release/hashsumr-*.zip
+          name: hashsumr-${{ github.ref_name }}.tar.gz
+          path: release/hashsumr-*.tar.gz
+
+      - name: Upload artifact (zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashsumr-${{ github.ref_name }}.zip
+          path: release/hashsumr-*.zip
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
