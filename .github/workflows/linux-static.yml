@@ -11,8 +11,7 @@ jobs:
         arch: [ amd64, arm64]
 
     container:
-      image: alpine:latest
-      platform: ${{ matrix.arch == 'arm64' && 'linux/arm64' || 'linux/amd64' }}
+      image: ${{ matrix.arch == 'arm64' && 'arm64v8/alpine:latest' || 'alpine:latest' }}
       options: --privileged
 
     steps:
