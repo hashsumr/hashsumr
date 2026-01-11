@@ -28,7 +28,7 @@ static int opt_check = 0;
 static int opt_tag = 1;
 static int opt_zero = 0;
 static int opt_workers = 0;
-static int opt_np = 0;
+static int opt_np = 1;
 static int opt_ignore_missing = 0;
 static int opt_quiet = 0;
 static int opt_status = 0;
@@ -109,7 +109,8 @@ usage() {
 "  -z, --zero            end each output line with NUL, not newline,\n"
 "                          and disable file name escaping\n"
 "      --workers         set the number or parallel workers\n"
-"      --np              no progress bar\n"
+"      --np              no progress bar (default)\n"
+"  -p, --progress        show progress bar\n"
 "\n"
 "The following five options are useful only when verifying checksums:\n"
 "      --ignore-missing  don't fail or report status for missing files\n"
@@ -144,6 +145,7 @@ parse_opts(int argc, TCHAR *argv[]) {
 		{ _T("zero"),            no_argument, NULL, _T('z') },
 		{ _T("workers"),   required_argument, NULL,     0   },
 		{ _T("np"),              no_argument, NULL,     0   },
+		{ _T("progress"),        no_argument, NULL, _T('p') },
 		{ _T("ignore-missing"),  no_argument, NULL,     0   },
 		{ _T("quiet"),           no_argument, NULL, _T('q') },
 		{ _T("status"),          no_argument, NULL,     0   },
@@ -160,7 +162,7 @@ parse_opts(int argc, TCHAR *argv[]) {
 #define strcmp	wcscmp
 #define strtol	wcstol
 #endif
-	while((ch = getopt_long(argc, argv, _T("1a:bctzqwhv"), opts, &optidx)) != -1) {
+	while((ch = getopt_long(argc, argv, _T("1a:bctzpqwhv"), opts, &optidx)) != -1) {
 		switch(ch) {
 		case 0: /* for longopts */
 			if(strcmp(opts[optidx].name, _T("tag")) == 0) {
@@ -216,6 +218,9 @@ parse_opts(int argc, TCHAR *argv[]) {
 			break;
 		case _T('z'):
 			opt_zero = 1;
+			break;
+		case _T('p'):
+			opt_np = 0;
 			break;
 		case _T('q'):
 			opt_quiet = 1;
