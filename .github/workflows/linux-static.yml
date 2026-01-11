@@ -29,7 +29,7 @@ jobs:
             sh -c "apk update && apk add --no-cache \
                      git make cmake gcc g++ musl-dev openssl-dev openssl-libs-static \
                      file && \
-                   make hashsumr-static && \
+                   make clean hashsumr-static && \
                    strip hashsumr-static && \
                    mv hashsumr-static hashsumr-linux-${{ matrix.arch }}-static"
 
