@@ -25,7 +25,7 @@ blake3/libblake3.a:
 	@-mkdir ./blake3
 	cp blake3-src/c/blake3.h          ./blake3/
 	cp blake3-src/c/build/libblake3.a ./blake3/
-	rm -rf blake3-src/c/build
+	-rm -rf blake3-src/c/build
 
 minibar.o: minibar/minibar.c
 	$(CC) -c -o $@ $(CFLAGS) $<
@@ -44,6 +44,6 @@ hashsumr-static: blake3/libblake3.a $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_C
 	$(CC) -o $@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) -static-pie
 
 clean:
-	rm -f *.o $(PROGS) hashsumr-static
-	rm -rf ./blake3
+	-rm -f *.o $(PROGS) hashsumr-static
+	-rm -rf ./blake3
 

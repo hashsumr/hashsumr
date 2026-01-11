@@ -19,7 +19,7 @@ blake3/blake3.lib:
 	@-mkdir blake3
 	copy blake3-src\c\blake3.h .\blake3
 	copy blake3-src\c\build\blake3.lib .\blake3
-	rmdir /s /q blake3-src\c\build
+	-rmdir /s /q blake3-src\c\build
 
 minibar.obj: minibar/minibar.c
 	$(CC) $(CFLAGS) /c /Fo$@ $**
