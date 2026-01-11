@@ -16,7 +16,8 @@ jobs:
         run: |
           apk update
           apk add --no-cache \
-            git make cmake gcc g++ musl-dev openssl-dev openssl-libs-static
+            git make cmake gcc g++ musl-dev openssl-dev openssl-libs-static \
+            file
 
       - name: Checkout source
         uses: actions/checkout@v4
