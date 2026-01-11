@@ -1,6 +1,9 @@
 name: Build Windows binary (amd64 & arm64)
 
 on:
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
   workflow_dispatch:
 
 jobs:
@@ -30,4 +33,9 @@ jobs:
         with:
           name: hashsumr-${{ matrix.arch }}.exe
           path: hashsumr-${{ matrix.arch }}.exe
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+          files: hashsumr-${{ matrix.arch }}.exe
 
