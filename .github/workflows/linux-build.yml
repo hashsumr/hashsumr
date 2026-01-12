@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-static-amd64:
+  build-linux-static:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,7 +33,7 @@ jobs:
                    strip hashsumr-static && \
                    mv hashsumr-static hashsumr-linux-${{ matrix.arch }}-static"
 
-      - name: Upload static binary (artifact)
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hashsumr-linux-${{ matrix.arch }}-static
