@@ -123,7 +123,7 @@ process_line(char *line, job_t *job, md_t *alg, int init_mutex) {
 		unescape(job->filename);
 #ifdef _WIN32
 	job->wfilename = _wcsdup(utf82wchar(job->filename, buf, sizeof(buf)/sizeof(wchar_t)));
-	strncpy_s(job->dcheck, EVP_MAX_DIGEST_SIZE, hash, EVP_MAX_DIGEST_SIZE);
+	strncpy_s(job->dcheck, EVP_MAX_DIGEST_SIZE, hash, _TRUNCATE);
 #else
 	strncpy(job->dcheck, hash, EVP_MAX_DIGEST_SIZE);
 #endif

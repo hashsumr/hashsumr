@@ -271,7 +271,7 @@ escape(char *input, char *output, int outlen) {
 	char *iptr = input, *optr = output;
 	if(opt_zero) {
 #ifdef _WIN32
-		strncpy_s(output, outlen, input, strlen(input));
+		strncpy_s(output, outlen, input, _TRUNCATE);
 #else
 		strncpy(output, input, outlen);
 #endif
