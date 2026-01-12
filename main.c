@@ -574,6 +574,11 @@ main(int argc, char *argv[]) {
 #endif
 	if((idx = parse_opts(argc, argv)) < 0) return -1;
 
+	if(argc - idx <= 0) {
+		fprintf(stderr, PREFIX "no file given.\n");
+		return usage();
+	}
+
 	if(opt_check == 0) {
 		njobs = argc - idx;
 		if((jobs = jobs_alloc(njobs)) == NULL) exit(-1);
