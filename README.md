@@ -103,18 +103,18 @@ The following five options are useful only when verifying checksums:
 
 > Hardware: Intel i7-1260P CPU + WD Blue SN570 SSD
 
-> Files: Debian ISO files x6 (25,203,544,064 bytes) + CJK filenames x4 (108 bytes)
+> Files: Debian/FreeBSD/Windows ISO files x8 (35,385,284,608 bytes) + CJK filenames x4 (108 bytes)
 
-> Summary: 1 worker (19.33s) vs. 9 workers (4.42s ~ 4.37x speedup)
+> Summary: 1 worker (23.40s) vs. 9 workers (4.66s ~ 5.02x speedup)
 
 > Commands (PowerShell):
 
 ```
-(Measure-Command { .\hashsumr --workers 1 c:\iso\* }).TotalSeconds
-(Measure-Command { .\hashsumr c:\iso\* }).TotalSeconds
+(Measure-Command { .\hashsumr-amd64 -p --workers 1 c:\iso\* }).TotalSeconds
+(Measure-Command { .\hashsumr-amd64 -p c:\iso\* }).TotalSeconds
 ```
 
-![hashsumr-windows-demo](https://hashsumr.github.io/hashsumr/hashsumr-win11-2x-fin.gif)
+![hashsumr-windows-demo](https://hashsumr.github.io/hashsumr/hashsumr-win11-2x-fin.gif?v=0.0.2)
 
 ### Single Worker vs. Multiple Workers on MacOS
 
@@ -122,7 +122,7 @@ The following five options are useful only when verifying checksums:
 
 > Files: [Mistral-Large-3-675B-Instruct-2512-GGUF](https://huggingface.co/unsloth/Mistral-Large-3-675B-Instruct-2512-GGUF/tree/main/Q4_K_M) model files x9 (406,989,520,384 bytes)
 
-> Summary: 1 worker (156.83s) vs. 10 workers (22.69s ~ 6.91x speedup)
+> Summary: 1 worker (155.35s) vs. 10 workers (22.44s ~ 6.92x speedup)
 
 > Commands:
 
@@ -131,7 +131,7 @@ The following five options are useful only when verifying checksums:
 /usr/bin/time ./hashsumr /tmp/m/* > /dev/null
   ```
 
-![hashsumr-macos-demo](https://hashsumr.github.io/hashsumr/hashsumr-macos-8x-fin.gif)
+![hashsumr-macos-demo](https://hashsumr.github.io/hashsumr/hashsumr-macos-8x-fin.gif?v=0.0.2)
 
 ### Checksum Verification
 
@@ -139,7 +139,7 @@ The following five options are useful only when verifying checksums:
 
 > Files: FreeBSD 15.0 amd64 Release [files](https://download.freebsd.org/releases/ISO-IMAGES/15.0/) x10 (14,156,216,784 bytes)
 
-> Summary: sha256sum (6.63s) + sha512sum (13.24s) vs. 17 workers (4.28s ~ 4.64x speedup)
+> Summary: sha256sum (6.63s) + sha512sum (13.15s) vs. 17 workers (4.27s ~ 4.63x speedup)
 
 > Commands:
 
@@ -149,5 +149,5 @@ The following five options are useful only when verifying checksums:
 /usr/bin/time hashsumr -c CHECKSUM*
 ```
 
-![hashsumr-check-demo](https://hashsumr.github.io/hashsumr/hashsumr-check-4x-fin.gif)
+![hashsumr-check-demo](https://hashsumr.github.io/hashsumr/hashsumr-check-4x-fin.gif?v=0.0.2)
 
