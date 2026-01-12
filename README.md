@@ -127,8 +127,8 @@ The following five options are useful only when verifying checksums:
 > Commands:
 
 ```
-/usr/bin/time ./hashsumr --workers 1 /tmp/m/* > /dev/null
-/usr/bin/time ./hashsumr /tmp/m/* > /dev/null
+/usr/bin/time hashsumr -p --workers 1 /tmp/m/*.gguf > /dev/null
+/usr/bin/time hashsumr -p /tmp/m/*.gguf > /dev/null
   ```
 
 ![hashsumr-macos-demo](https://hashsumr.github.io/hashsumr/hashsumr-macos-8x-fin.gif?v=0.0.2)
@@ -146,7 +146,7 @@ The following five options are useful only when verifying checksums:
 ```
 /usr/bin/time sha256sum -c CHECKSUM.SHA256-FreeBSD-15.0-RELEASE-amd64
 /usr/bin/time sha512sum -c CHECKSUM.SHA512-FreeBSD-15.0-RELEASE-amd64
-/usr/bin/time hashsumr -c CHECKSUM*
+/usr/bin/time hashsumr -p -c CHECKSUM*
 ```
 
 ![hashsumr-check-demo](https://hashsumr.github.io/hashsumr/hashsumr-check-4x-fin.gif?v=0.0.2)
