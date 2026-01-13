@@ -13,7 +13,17 @@ hashsumr (pronounced hash-summer) is a command-line utility designed for develop
 - ✅ Progress bar: visually track hashing progress for large files
 - ✅ Automatic detection: selects the hash algorithm when verifying BSD-style checksum files
 
-## Installation
+## Pre-Built Binaries
+
+You can find pre-built binaries from the [releases](https://github.com/hashsumr/hashsumr/releases) page. No extra dependencies are required for executing the CLI tool.
+
+Available pre-built binaries:
+- `hasusumr-linux-amd64-static`; For Linux x86_64 platform
+- `hasusumr-linux-arm64-static`: For Linux aarch64 platform
+- `hashsumr-amd64.exe`: For Windows x86_64 platform
+- `hashsumr-arm64.exe`: For Windows aarch64 platform
+
+## Compile from Source Codes
 
 ### Dependencies
 
