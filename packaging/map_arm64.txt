@@ -1,0 +1,6 @@
+[Files]
+".\msix\AppxManifest_arm64.xml"        "AppxManifest.xml"
+".\msix\hashsumr-arm64.exe"            "hashsumr-arm64.exe"
+".\msix\Assets\StoreLogo.png"          "Assets\StoreLogo.png"
+".\msix\Assets\Square44x44Logo.png"    "Assets\Square44x44Logo.png"
+".\msix\Assets\Square150x150Logo.png"  "Assets\Square150x150Logo.png"
