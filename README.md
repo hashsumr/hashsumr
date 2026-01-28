@@ -21,8 +21,7 @@ Available pre-built binaries:
 - `hasusumr-linux-amd64-static`; For Linux x86_64 platform
 - `hasusumr-linux-arm64-static`: For Linux aarch64 platform
 - `hashsumr-amd64.exe`: For Windows x86_64 platform (require [Visual C++ Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist))
-- `hashsumr-arm64.exe`: For Windows aarch64 platfor (require [Visual C++ Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist))
-m
+- `hashsumr-arm64.exe`: For Windows aarch64 platform (require [Visual C++ Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist))
 
 ## Compile from Source Codes
 
