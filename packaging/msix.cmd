@@ -1,10 +1,11 @@
 @echo off
 
+@SET /P version="Enter the version number to be packed: "
 @SET /P password="Enter your PFX certificate password: "
 
 @REM download binaries
-curl -L -o "msix\hashsumr-amd64.exe" "https://github.com/hashsumr/hashsumr/releases/download/v0.0.2/hashsumr-amd64.exe"
-curl -L -o "msix\hashsumr-arm64.exe" "https://github.com/hashsumr/hashsumr/releases/download/v0.0.2/hashsumr-arm64.exe"
+curl -L -o "msix\hashsumr-amd64.exe" "https://github.com/hashsumr/hashsumr/releases/download/v%version%/hashsumr-amd64.exe"
+curl -L -o "msix\hashsumr-arm64.exe" "https://github.com/hashsumr/hashsumr/releases/download/v%version%/hashsumr-arm64.exe"
 
 @REM packaging
 mkdir output
