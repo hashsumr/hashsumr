@@ -2,7 +2,7 @@
 
 ## Directory Structure
 ```
-msix/
+msix/app
 ├─ AppxManifest.xml
 ├─ Assets/
 │  ├─ StoreLogo.png (recommended: 100x100)
@@ -17,7 +17,7 @@ msix/
 1. Create the certificate in your personal store
 ```
 $cert = New-SelfSignedCertificate -Type CodeSigningCert `
-    -Subject "CN=hashsumr" `
+    -Subject "CN=613656AF-462E-4804-97D4-06B846E006FE" `
     -HashAlgorithm sha256 `
     -CertStoreLocation "Cert:\CurrentUser\My" `
     -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3") # Key usage for Code Signing
@@ -25,7 +25,7 @@ $cert = New-SelfSignedCertificate -Type CodeSigningCert `
 
 2. Export the certificate to a file
 ```
-$certPath = ".\hashsumr-dev.cer"
+$certPath = ".\cert\hashsumr-dev.cer"
 Export-Certificate -Cert $cert -FilePath $certPath
 ```
 
@@ -51,7 +51,7 @@ Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\LocalMachine\Tr
 
 ## Install the Package (PowerShell)
 ```
-Add-AppxPackage -Path .\hashsumr.msixbundle
+Add-AppxPackage -Path .\output\hashsumr.msixbundle
 ```
 
 ## List and Uninstall the Package (PowerShell)
