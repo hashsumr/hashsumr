@@ -1,3 +1,3 @@
 [Files]
-"hashsumr_amd64.msix"	"hashsumr_amd64.appx"
-"hashsumr_arm64.msix"	"hashsumr_arm64.appx"
+".\output\hashsumr_amd64.msix"	"hashsumr_amd64.appx"
+".\output\hashsumr_arm64.msix"	"hashsumr_arm64.appx"
