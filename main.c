@@ -86,7 +86,7 @@ int
 usage() {
 	int algstrlen = 0;
 	char algstr[1024] = "", *wptr = algstr;
-	for(md_t *a = get_hashes(); a->name != NULL; a++) {
+	for(md_t *a = get_hashes(); a != NULL && a->name != NULL; a++) {
 		int sz;
 		sz = snprintf(wptr, sizeof(algstr)-algstrlen, " %s", a->name);
 		algstrlen += sz;
@@ -685,7 +685,10 @@ main(int argc, char *argv[]) {
 			print_check(njobs, jobs);
 	}
 
-	free(jobs);
+	if(jobs != NULL) {
+		free(jobs);
+		jobs = NULL;
+	}
 
 	return return_value();
 }
