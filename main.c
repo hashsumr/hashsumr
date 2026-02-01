@@ -550,6 +550,25 @@ expand_args(int *argc, wchar_t *argv[]) {
 #endif
 
 int
+setup_windows_console() {
+	int err = 0;
+#ifdef _WIN32
+	if(GetConsoleCP() != CP_UTF8) {
+		if(SetConsoleCP(CP_UTF8) == 0)
+			err |= 0x01;
+	}
+	if(GetConsoleOutputCP() != CP_UTF8) {
+		if(SetConsoleOutputCP(CP_UTF8) == 0)
+			err |= 0x02;
+	}
+	if(setlocale(LC_ALL, ".UTF-8") == NULL) {
+		err |= 0x04;
+	}
+#endif
+	return err;
+}
+
+int
 #ifdef _WIN32
 wmain(int argc, wchar_t *argv[]) {
 #else
@@ -559,11 +578,11 @@ main(int argc, char *argv[]) {
 	int ncores = get_ncores();
 	char msg[128];
 	pthread_t tid;
-#ifdef _WIN32
-	setlocale(LC_ALL, ".UTF-8");
-	SetConsoleOutputCP(CP_UTF8);
-	SetConsoleCP(CP_UTF8);
-#endif
+
+	if((err = setup_windows_console()) != 0) {
+		fprintf(stderr, PREFIX "WARNING: windows console setup may have failed (%x).", err);
+	}
+
 	if((opt_alg = lookup_hash("SHA256")) == NULL) {
 		fprintf(stderr, PREFIX "FATAL: cannot find the default algorithm.\n");
 		return -1;
