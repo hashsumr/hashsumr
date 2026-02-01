@@ -561,9 +561,11 @@ setup_windows_console() {
 		if(SetConsoleOutputCP(CP_UTF8) == 0)
 			err |= 0x02;
 	}
+#if 0
 	if(setlocale(LC_ALL, ".UTF-8") == NULL) {
 		err |= 0x04;
 	}
+#endif
 #endif
 	return err;
 }
