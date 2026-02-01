@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define TCHAR	wchar_t
 #define _T(x)	L##x
 #else
