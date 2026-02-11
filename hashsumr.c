@@ -65,7 +65,7 @@ md_t algs[] = {
 char *	/* should be thread-safe */
 herrmsg(char *buf, size_t sz, int errnum) {
 #ifdef _WIN32
-	strerror_s(buf, sizeof(buf), errnum);
+	strerror_s(buf, sz, errnum);
 #else
 	snprintf(buf, sz, "%s", strerror(errnum));
 #endif
