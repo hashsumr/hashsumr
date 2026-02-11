@@ -6,6 +6,11 @@
 int optind = 1;       // Index of next argv element
 wchar_t *optarg = NULL;  // Option argument
 
+// Defined in main.c
+char * wchar2utf8(wchar_t *src, char *dst, int sz);
+char * wchar2utf8_alloc(wchar_t *src);
+char * wchar2utf8_static(const wchar_t *s);
+
 // Example minimal parsing function
 int
 getopt_long(int argc, wchar_t **argv, const wchar_t *optstring,
@@ -28,7 +33,7 @@ getopt_long(int argc, wchar_t **argv, const wchar_t *optstring,
 					if (optind < argc) {
 						optarg = argv[optind++];
 					} else {
-						fwprintf(stderr, L"Option '--%s' requires an argument\n", longopts[i].name);
+						fprintf(stderr, "Option '--%s' requires an argument\n", wchar2utf8_static(longopts[i].name));
 						return L'?';
 					}
 				} else {
@@ -37,7 +42,7 @@ getopt_long(int argc, wchar_t **argv, const wchar_t *optstring,
 				return longopts[i].val;
 			}
 		}
-		fwprintf(stderr, L"Unknown option: %s\n", arg);
+		fprintf(stderr, "Unknown option: %s\n", wchar2utf8_static(arg));
 		optind++;
 		return '?';
 	}
@@ -47,7 +52,7 @@ getopt_long(int argc, wchar_t **argv, const wchar_t *optstring,
 		wchar_t opt = arg[1];
 		const wchar_t *p = wcschr(optstring, opt);
 		if (!p) {
-			fwprintf(stderr, L"Unknown option: -%c\n", opt);
+			fprintf(stderr, "Unknown option: -%c\n", wchar2utf8_static(opt));
 			optind++;
 			return '?';
 		}
@@ -57,7 +62,7 @@ getopt_long(int argc, wchar_t **argv, const wchar_t *optstring,
 			} else if (optind + 1 < argc) { // next argv
 				optarg = argv[++optind];
 			} else {
-				fwprintf(stderr, L"Option -%c requires an argument\n", opt);
+				fprintf(stderr, "Option -%c requires an argument\n", wchar2utf8_static(opt));
 				optind++;
 				return L'?';
 			}
