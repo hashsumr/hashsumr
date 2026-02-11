@@ -53,7 +53,7 @@ static int check_linerror = 0;
 
 #ifdef _WIN32
 char *
-wchar2utf8(wchar_t *src, char *dst, int sz) {
+wchar2utf8(const wchar_t *src, char *dst, int sz) {
 	int result;
 	if(src == NULL || dst== NULL || sz < 0)
 		return NULL;
@@ -80,50 +80,46 @@ wchar2utf8_alloc(wchar_t *src) {
 	}
 	return utf8;
 }
+
+char *
+wchar2utf8_static(wchar_t *s) {
+	static char output[512];
+	return wchar2utf8(s, output, sizeof(output));
+}
 #endif
 
 int
 usage() {
-	int algstrlen = 0;
-	char algstr[1024] = "", *wptr = algstr;
+	fprintf(stderr, "Usage: hashsumr [OPTION]... [FILE]...\n");
+	fprintf(stderr, "Print or check hash-based checksums.\n\n");
+	fprintf(stderr, "AVAILABLE ALGORITHMS: (case insensitive)\n ");
 	for(md_t *a = get_hashes(); a != NULL && a->name != NULL; a++) {
-		int sz;
-		sz = snprintf(wptr, sizeof(algstr)-algstrlen, " %s", a->name);
-		algstrlen += sz;
-		wptr += sz;
+		fprintf(stderr, " %s", a->name);
 	}
-	fprintf(stderr, "Usage: hashsumr [OPTION]... [FILE]...\n"
-"Print or check hash-based checksums.\n"
-"\n"
-"AVAILABLE ALGORITHMS: (case insensitive)\n"
-" %s\n"
-"\n"
-"OPTION: (* - not implemented, for compatibility only)\n"
-"  -1, --one             classic mode (no progress bar, no workers)\n"
-"  -a, --algorithm       choose the algorithm (default: %s)\n"
-"  -b, --binary          read in binary mode (default)\n"
-"  -c, --check           read checksums from the FILEs and check them\n"
-"      --gnu             create a GNU-style checksum\n"
-"      --tag             create a BSD-style checksum (default)\n"
-"  -t, --text            (*) read in text mode\n"
-"  -z, --zero            end each output line with NUL, not newline,\n"
-"                          and disable file name escaping\n"
-"      --workers         set the number or parallel workers\n"
-"      --np              no progress bar (default)\n"
-"  -p, --progress        show progress bar\n"
-"\n"
-"The following five options are useful only when verifying checksums:\n"
-"      --ignore-missing  don't fail or report status for missing files\n"
-"  -q, --quiet           don't print OK for each successfully verified file\n"
-"      --status          don't output anything, status code shows success\n"
-"      --strict          exit non-zero for improperly formatted checksum lines\n"
-"  -w, --warn            warn about improperly formatted checksum lines\n"
-"\n"
-"  -h, --help            display this help and exit\n"
-"  -v, --version         output version information and exit\n"
-		"",
-		algstr,
-		opt_alg->name);
+	fprintf(stderr, "\n\n");
+	fprintf(stderr, "OPTION: (* - not implemented, for compatibility only)\n");
+	fprintf(stderr, "  -1, --one             classic mode (no progress bar, no workers)\n");
+	fprintf(stderr, "  -a, --algorithm       choose the algorithm (default: %s)\n", opt_alg->name);
+	fprintf(stderr, "  -b, --binary          read in binary mode (default)\n");
+	fprintf(stderr, "  -c, --check           read checksums from the FILEs and check them\n");
+	fprintf(stderr, "      --gnu             create a GNU-style checksum\n");
+	fprintf(stderr, "      --tag             create a BSD-style checksum (default)\n");
+	fprintf(stderr, "  -t, --text            (*) read in text mode\n");
+	fprintf(stderr, "  -z, --zero            end each output line with NUL, not newline,\n");
+	fprintf(stderr, "                          and disable file name escaping\n");
+	fprintf(stderr, "      --workers         set the number or parallel workers\n");
+	fprintf(stderr, "      --np              no progress bar (default)\n");
+	fprintf(stderr, "  -p, --progress        show progress bar\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "The following five options are useful only when verifying checksums:\n");
+	fprintf(stderr, "      --ignore-missing  don't fail or report status for missing files\n");
+	fprintf(stderr, "  -q, --quiet           don't print OK for each successfully verified file\n");
+	fprintf(stderr, "      --status          don't output anything, status code shows success\n");
+	fprintf(stderr, "      --strict          exit non-zero for improperly formatted checksum lines\n");
+	fprintf(stderr, "  -w, --warn            warn about improperly formatted checksum lines\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -h, --help            display this help and exit\n");
+	fprintf(stderr, "  -v, --version         output version information and exit\n");
 	return -1;
 }
 
@@ -199,8 +195,7 @@ parse_opts(int argc, TCHAR *argv[]) {
 			}
 			if(a->name == NULL) {
 #ifdef _WIN32
-				fprintf(stderr, PREFIX);
-				fwprintf(stderr, L"unsupported algorithm `%s'.\n", optarg);
+				fprintf(stderr, PREFIX "unsupported algorithm `%s'.\n", wchar2utf8(optarg, buf, sizeof(buf)));
 #else
 				fprintf(stderr, PREFIX "unsupported algorithm `%s'.\n", optarg);
 #endif
@@ -355,8 +350,8 @@ return_value() {
 }
 
 void
-print_check(int njobs, job_t *jobs) {
-	for(int i = 0; i < njobs; i++) {
+print_check(int n, job_t *jobs) {
+	for(int i = 0; i < n; i++) {
 		print_check1(&jobs[i]);
 	}
 }
@@ -533,8 +528,10 @@ expand_args(int *argc, wchar_t *argv[]) {
 	int i, n, newargc = 0, sz = 16;
 	wchar_t **newargv = NULL;
 	if(argc == NULL) return NULL;
-	if((newargv = (wchar_t **) malloc(sizeof(wchar_t*) * sz)) == NULL)
+	if((newargv = (wchar_t **) malloc(sizeof(wchar_t*) * sz)) == NULL) {
+		fprintf(stderr, PREFIX "argv/append: malloc failed\n");
 		return NULL;
+	}
 	newargc = 0;
 	for(i = 0; i < *argc; i++) {
 		if(wcschr(argv[i], L'*') == NULL
@@ -590,8 +587,10 @@ main(int argc, char *argv[]) {
 		return -1;
 	}
 #ifdef _WIN32
-	if((argv = expand_args(&argc, argv)) == NULL)
+	if((argv = expand_args(&argc, argv)) == NULL) {
+		fprintf(stderr, PREFIX "FATAL: expand args failed.\n");
 		return -1;
+	}
 #endif
 	if((idx = parse_opts(argc, argv)) < 0) return -1;
 
@@ -621,16 +620,13 @@ main(int argc, char *argv[]) {
 		for(i = 0; i < files; i++) {
 			int n = scan_checks(argv[idx+i]);
 			if(n < 0) {
-#ifdef _WIN32
-				fprintf(stderr, PREFIX);
-				fwprintf(stderr, L"%s: open for scanning failed (%d): ",
-					argv[idx+1], errno);
-				fprintf(stderr, "%s\n",
-					herrmsg(msg, sizeof(msg), errno));
-#else
 				fprintf(stderr, PREFIX "%s: open for scanning failed (%d): %s\n",
-					argv[idx+i], errno, herrmsg(msg, sizeof(msg), errno));
+#ifdef _WIN32
+					wchar2utf8_static(argv[idx+i]),
+#else
+					argv[idx+i],
 #endif
+					errno, herrmsg(msg, sizeof(msg), errno));
 				continue;
 			}
 			estjobs += n;
