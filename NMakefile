@@ -1,7 +1,8 @@
 CC      = cl
 AR      = lib
-CFLAGS  = /nologo /utf-8 /W4 /Zi /MD
-LDFLAGS = 
+CFLAGS  = /nologo /utf-8 /W4 /Zi /MD /guard:cf /permissive-
+LDFLAGS = /link /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /TSAWARE /DEBUG
+# no /APPCONTAINER
 
 PROGS   = hashsumr.exe
 

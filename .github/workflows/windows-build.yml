@@ -26,10 +26,16 @@ jobs:
         run: |
           nmake /f NMakefile clean all
           rename hashsumr.exe hashsumr-${{ matrix.arch }}.exe
+          rename hashsumr.pdb hashsumr-${{ matrix.arch }}.pdb
           
-      - name: Upload artifact
+      - name: Upload artifact (exe)
         uses: actions/upload-artifact@v4
         with:
           name: hashsumr-${{ matrix.arch }}.exe
           path: hashsumr-${{ matrix.arch }}.exe
 
+      - name: Upload artifact (pdb)
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashsumr-${{ matrix.arch }}.pdb
+          path: hashsumr-${{ matrix.arch }}.pdb

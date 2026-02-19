@@ -14,7 +14,7 @@
 #include "minibar/pthread_compat/pthread_compat.h"
 
 #define PREFIX	"hashsumr: "
-#define VERSION	"0.2.0"
+#define VERSION	"0.2.2"
 
 #ifdef _WIN32
 #define PATH_MAX	256
@@ -52,6 +52,21 @@ static int check_failed = 0;
 static int check_linerror = 0;
 
 #ifdef _WIN32
+LONG WINAPI
+MyCrashHandler(struct _EXCEPTION_POINTERS *ExceptionInfo) {
+    DWORD code = ExceptionInfo->ExceptionRecord->ExceptionCode;
+
+    FILE *f = fopen("error_log.txt", "a");
+    if (f) {
+        fprintf(f, "--- CRASH REPORT ---\n");
+        fprintf(f, "Exception Code: 0x%08X\n", code);
+        fclose(f);
+    }
+
+    //return EXCEPTION_EXECUTE_HANDLER;	// close the app normally
+    return EXCEPTION_CONTINUE_SEARCH;	// show the crash dialog
+}
+
 char *
 wchar2utf8(const wchar_t *src, char *dst, int sz) {
 	int result;
@@ -574,9 +589,13 @@ wmain(int argc, wchar_t *argv[]) {
 main(int argc, char *argv[]) {
 #endif
 	int i, idx, err;
-	int ncores = get_ncores();
+	int ncores;
 	char msg[128];
 	pthread_t tid;
+#ifdef _WIN32
+	SetUnhandledExceptionFilter(MyCrashHandler);
+#endif
+	ncores = get_ncores();
 
 	if((err = setup_windows_console()) != 0) {
 		fprintf(stderr, PREFIX "WARNING: windows console setup may have failed (%x).", err);
