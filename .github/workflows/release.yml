@@ -74,25 +74,25 @@ jobs:
           rename hashsumr.exe hashsumr-${{ matrix.arch }}.exe
           rename hashsumr.pdb hashsumr-${{ matrix.arch }}.pdb
           
-      - name: Upload artifact
+      - name: Upload artifact (exe)
         uses: actions/upload-artifact@v4
         with:
           name: hashsumr-${{ matrix.arch }}.exe
           path: hashsumr-${{ matrix.arch }}.exe
 
-      - name: Upload artifact
+      - name: Upload artifact (pdb)
         uses: actions/upload-artifact@v4
         with:
           name: hashsumr-${{ matrix.arch }}.pdb
           path: hashsumr-${{ matrix.arch }}.pdb
 
-      - name: Upload to Release
+      - name: Upload to Release (exe)
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
           files: hashsumr-${{ matrix.arch }}.exe
 
-      - name: Upload to Release
+      - name: Upload to Release (pdb)
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
