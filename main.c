@@ -3,6 +3,7 @@
 #include <locale.h>
 #ifdef _WIN32
 #include <windows.h>
+#include <dbghelp.h>
 #include "getopt.h"
 #else
 #include <getopt.h>
@@ -18,6 +19,7 @@
 
 #ifdef _WIN32
 #define PATH_MAX	256
+#pragma comment(lib, "dbghelp.lib")
 #endif
 
 /* options */
@@ -52,19 +54,48 @@ static int check_failed = 0;
 static int check_linerror = 0;
 
 #ifdef _WIN32
+void
+WriteTextLog(DWORD exceptionCode) {
+	FILE *f = fopen("crash_report.txt", "a");
+	if (f) {
+		time_t now = time(NULL);
+		fprintf(f, "Crash Date: %s", ctime(&now));
+		fprintf(f, "Exception Code: 0x%08X\n", exceptionCode);
+		fprintf(f, "----------------------------------\n");
+		fclose(f);
+	}
+}
+
+void
+CreateMiniDump(EXCEPTION_POINTERS* pep) {
+	HANDLE hFile = CreateFileA("crash_dump.dmp", GENERIC_WRITE, 0, NULL, 
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFile != INVALID_HANDLE_VALUE) {
+		MINIDUMP_EXCEPTION_INFORMATION mdei;
+		mdei.ThreadId = GetCurrentThreadId();
+		mdei.ExceptionPointers = pep;
+		mdei.ClientPointers = FALSE;
+
+		// Write the dump
+		BOOL success = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), 
+			hFile, MiniDumpNormal, &mdei, NULL, NULL);
+
+		if (success) printf("Minidump created: crash_dump.dmp\n");
+		CloseHandle(hFile);
+	}
+}
+
 LONG WINAPI
 MyCrashHandler(struct _EXCEPTION_POINTERS *ExceptionInfo) {
-    DWORD code = ExceptionInfo->ExceptionRecord->ExceptionCode;
+	DWORD code = ExceptionInfo->ExceptionRecord->ExceptionCode;
 
-    FILE *f = fopen("error_log.txt", "a");
-    if (f) {
-        fprintf(f, "--- CRASH REPORT ---\n");
-        fprintf(f, "Exception Code: 0x%08X\n", code);
-        fclose(f);
-    }
+	printf("\n!!! CRASH DETECTED: 0x%08X !!!\n", code);
+	WriteTextLog(code);
+	CreateMiniDump(ExceptionInfo);
 
-    //return EXCEPTION_EXECUTE_HANDLER;	// close the app normally
-    return EXCEPTION_CONTINUE_SEARCH;	// show the crash dialog
+	//return EXCEPTION_EXECUTE_HANDLER;	// close the app normally
+	return EXCEPTION_CONTINUE_SEARCH;	// show the crash dialog
 }
 
 char *
