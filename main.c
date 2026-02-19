@@ -14,7 +14,7 @@
 #include "minibar/pthread_compat/pthread_compat.h"
 
 #define PREFIX	"hashsumr: "
-#define VERSION	"0.2.2"
+#define VERSION	"0.2.3"
 
 #ifdef _WIN32
 #define PATH_MAX	256
