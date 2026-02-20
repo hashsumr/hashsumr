@@ -4,7 +4,7 @@ CFLAGS  = /nologo /utf-8 /W4 /Zi /MD /guard:cf /permissive-
 LDFLAGS = /link /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /TSAWARE /DEBUG
 # no /APPCONTAINER
 
-PROGS   = hashsumr.exe
+PROGS   = hashsumr.exe launcher.exe
 
 HASHSUMR_OBJS    = main.obj loadcheck.obj hashsumr.obj getopt.obj wrappers-openssl.obj wrappers-blake3.obj wrappers-win32.obj
 
@@ -36,6 +36,9 @@ pthread_win32.obj: minibar/pthread_compat/pthread_win32.c
 
 hashsumr.exe: blake3/blake3.lib $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
 	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib
+
+launcher.exe: launcher.obj
+	$(CC) $(CFLAGS) /Fe: $@ launcher.obj $(LDFLAGS) user32.lib
 
 clean:
 	-del /Q *.obj *.exe *.lib *.pdb *.ilk

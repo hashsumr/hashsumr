@@ -1,6 +1,5 @@
 /blake3
 /hashsum
-/packaging/hashsumr-dev.cer
-/packaging/hashsumr-dev.pfx
+/packaging/cert
 
 *.o

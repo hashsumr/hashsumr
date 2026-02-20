@@ -15,7 +15,7 @@
 #include "minibar/pthread_compat/pthread_compat.h"
 
 #define PREFIX	"hashsumr: "
-#define VERSION	"0.2.3"
+#define VERSION	"0.2.4"
 
 #ifdef _WIN32
 #define PATH_MAX	256
@@ -55,7 +55,7 @@ static int check_linerror = 0;
 
 #ifdef _WIN32
 void
-WriteTextLog(DWORD exceptionCode) {
+write_text_log(DWORD exceptionCode) {
 	FILE *f = fopen("crash_report.txt", "a");
 	if (f) {
 		time_t now = time(NULL);
@@ -67,7 +67,7 @@ WriteTextLog(DWORD exceptionCode) {
 }
 
 void
-CreateMiniDump(EXCEPTION_POINTERS* pep) {
+create_mini_dump(EXCEPTION_POINTERS* pep) {
 	HANDLE hFile = CreateFileA("crash_dump.dmp", GENERIC_WRITE, 0, NULL, 
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -87,12 +87,12 @@ CreateMiniDump(EXCEPTION_POINTERS* pep) {
 }
 
 LONG WINAPI
-MyCrashHandler(struct _EXCEPTION_POINTERS *ExceptionInfo) {
+my_crash_handler(struct _EXCEPTION_POINTERS *ExceptionInfo) {
 	DWORD code = ExceptionInfo->ExceptionRecord->ExceptionCode;
 
 	printf("\n!!! CRASH DETECTED: 0x%08X !!!\n", code);
-	WriteTextLog(code);
-	CreateMiniDump(ExceptionInfo);
+	write_text_log(code);
+	create_mini_dump(ExceptionInfo);
 
 	//return EXCEPTION_EXECUTE_HANDLER;	// close the app normally
 	return EXCEPTION_CONTINUE_SEARCH;	// show the crash dialog
@@ -166,7 +166,11 @@ usage() {
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -h, --help            display this help and exit\n");
 	fprintf(stderr, "  -v, --version         output version information and exit\n");
+#ifdef _WIN32
+	return 0;
+#else
 	return -1;
+#endif
 }
 
 int
@@ -273,12 +277,15 @@ parse_opts(int argc, TCHAR *argv[]) {
 		case _T('v'):
 			fprintf(stderr, PREFIX "version " VERSION "\n");
 			fflush(stderr);
-			exit(1);
+			exit(0);
 			break;
 		case _T('h'):
-		default:
 			usage();
-			exit(1);
+			exit(0);
+			break;
+		default:
+			exit(usage());
+			break;
 		}
 	}
 	argc -= optind;
@@ -624,7 +631,7 @@ main(int argc, char *argv[]) {
 	char msg[128];
 	pthread_t tid;
 #ifdef _WIN32
-	SetUnhandledExceptionFilter(MyCrashHandler);
+	SetUnhandledExceptionFilter(my_crash_handler);
 #endif
 	ncores = get_ncores();
 
@@ -634,15 +641,29 @@ main(int argc, char *argv[]) {
 
 	if((opt_alg = lookup_hash("SHA256")) == NULL) {
 		fprintf(stderr, PREFIX "FATAL: cannot find the default algorithm.\n");
+#ifdef _WIN32
+		return 0;
+#else
 		return -1;
+#endif
 	}
 #ifdef _WIN32
 	if((argv = expand_args(&argc, argv)) == NULL) {
 		fprintf(stderr, PREFIX "FATAL: expand args failed.\n");
+#ifdef _WIN32
+		return 0;
+#else
 		return -1;
+#endif
 	}
 #endif
-	if((idx = parse_opts(argc, argv)) < 0) return -1;
+	if((idx = parse_opts(argc, argv)) < 0) {
+#ifdef _WIN32
+		return 0;
+#else
+		return -1;
+#endif
+	}
 
 	if(argc - idx <= 0) {
 		fprintf(stderr, PREFIX "no file given.\n");
