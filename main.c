@@ -16,7 +16,7 @@
 #include "minibar/pthread_compat/pthread_compat.h"
 
 #define PREFIX	"hashsumr: "
-#define VERSION	"0.2.4"
+#define VERSION	"0.2.5"
 
 #ifdef _WIN32
 #define PATH_MAX	256
@@ -203,7 +203,8 @@ parse_opts(int argc, TCHAR *argv[]) {
 		{ 0, 0 }
 	};
 	if(argc < 2) {
-		return usage();
+		usage();
+		return -1;
 	}
 #ifdef _WIN32
 #define strcmp	wcscmp
