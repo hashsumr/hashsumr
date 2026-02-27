@@ -35,7 +35,7 @@ pthread_win32.obj: minibar/pthread_compat/pthread_win32.c
 	$(CC) $(CFLAGS) /c /Fo$@ $**
 
 hashsumr.exe: blake3/blake3.lib $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS)
-	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib
+	$(CC) $(CFLAGS) /Fe:$@ $(HASHSUMR_OBJS) $(MINIBAR_OBJS) $(PTHREAD_COMPAT_OBJS) $(LDFLAGS) blake3/blake3.lib bcrypt.lib user32.lib
 
 launcher.exe: launcher.obj
 	$(CC) $(CFLAGS) /Fe: $@ launcher.obj $(LDFLAGS) user32.lib

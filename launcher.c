@@ -9,7 +9,7 @@ WinMain(HINSTANCE h, HINSTANCE p, LPSTR cmd, int show) {
 	si.hStdInput  = NULL;
 	si.hStdOutput = NULL;
 	si.hStdError  = NULL;
-	CreateProcessA("hashsumr.exe", NULL, NULL, NULL, FALSE,
+	CreateProcessA("hashsumr.exe", "hashsumr.exe", NULL, NULL, FALSE,
 		CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
 	WaitForSingleObject(pi.hProcess, 5000);
 	DWORD code;

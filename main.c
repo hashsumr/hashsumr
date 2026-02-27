@@ -16,7 +16,7 @@
 #include "minibar/pthread_compat/pthread_compat.h"
 
 #define PREFIX	"hashsumr: "
-#define VERSION	"0.2.5"
+#define VERSION	"0.2.6"
 
 #ifdef _WIN32
 #define PATH_MAX	256
@@ -37,6 +37,7 @@ static int opt_quiet = 0;
 static int opt_status = 0;
 static int opt_strict = 0;
 static int opt_warn = 0;
+static int opt_pause = 0;
 
 /* global state */
 static int    running = 0;
@@ -167,6 +168,11 @@ usage() {
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -h, --help            display this help and exit\n");
 	fprintf(stderr, "  -v, --version         output version information and exit\n");
+	if(opt_pause) {
+		fprintf(stderr, "\nPress any key to exit ...");
+		fflush(stderr);
+		getchar();
+	}
 #ifdef _WIN32
 	return 0;
 #else
@@ -605,6 +611,23 @@ int
 setup_windows_console() {
 	int err = 0;
 #ifdef _WIN32
+	HWND console = GetConsoleWindow();
+	if(console == NULL || console == INVALID_HANDLE_VALUE) {
+		AllocConsole();
+		if(GetConsoleWindow() != NULL) {
+			freopen("CONOUT$", "w", stdout);
+			freopen("CONOUT$", "w", stderr);
+			freopen("CONIN$",  "r", stdin);
+			opt_pause = 1;
+		}
+	} else {
+		DWORD console_pid= 0;
+		GetWindowThreadProcessId(console, &console_pid);
+		if(GetCurrentProcessId() == console_pid) {
+			opt_pause = 1;
+		}
+	}
+	//
 	if(GetConsoleCP() != CP_UTF8) {
 		if(SetConsoleCP(CP_UTF8) == 0)
 			err |= 0x01;
